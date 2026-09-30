@@ -1,9 +1,9 @@
 {
-  "name": "ModelView — Бесплатный 3D Viewer",
-  "short_name": "ModelView",
+  "name": "3D Model Viewer",
+  "short_name": "3D Viewer",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#070a12",
-  "theme_color": "#080b14",
-  "description": "Просмотр 3DS и DAE прямо в браузере"
+  "background_color": "#0b1020",
+  "theme_color": "#111827",
+  "description": "OBJ/MTL/Textures viewer for iPhone, Android and Windows"
 }
