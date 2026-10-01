@@ -1,192 +1,65 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f4f5f7">
-<title>ModelView 3D</title>
-<style>
-:root{--bg:#f4f5f7;--stage:#eef0f3;--panel:#ffffffed;--line:#d9dde5;--text:#18202b;--muted:#687386;--accent:#5b55d6}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-button,label{font:inherit;cursor:pointer}button{color:inherit}
-.home{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#fff,#edf0f5);z-index:20}
-.card{width:min(900px,100%);background:#fffffff5;border:1px solid var(--line);border-radius:24px;padding:40px;box-shadow:0 20px 70px #26324718}
-.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#5b55d6;font-weight:800}
-h1{font-size:clamp(38px,7vw,68px);line-height:.96;margin:14px 0}
-.card p{color:var(--muted);line-height:1.65}.start{border:0;border-radius:11px;background:#5b55d6;color:#fff;padding:13px 19px;font-weight:750}
-.viewer{display:none;position:fixed;inset:0}.topbar{height:60px;position:absolute;z-index:10;inset:0 0 auto;display:flex;align-items:center;padding:8px 12px;background:#fffffff2;border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
-.brand{font-weight:800}.brand small{display:block;color:var(--muted);font-size:10px;font-weight:500}.actions{margin-left:auto}
-.btn{height:38px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#fff}.primary{background:#5b55d6;color:#fff;border-color:#5b55d6}
-.stage{position:absolute;inset:60px 0 0;background:var(--stage)}canvas{display:block;width:100%;height:100%;touch-action:none}
-.panel{position:absolute;left:12px;top:12px;width:280px;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:12px;backdrop-filter:blur(15px);box-shadow:0 12px 40px #26324718}
-.drop{border:1px dashed #b9c0cd;border-radius:11px;padding:12px;text-align:center;color:var(--muted);font-size:12px}.drop b{display:block;color:var(--text);font-size:13px;margin:3px}
-.pick{display:block;margin-top:9px;padding:9px;border-radius:9px;background:#eef0f5;color:#27303e}
-.tools{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.tool{height:36px;border:1px solid var(--line);border-radius:9px;background:#fff}.tool.active{background:#eceaff;border-color:#8d87df;color:#3e389e}
-.side{position:absolute;right:12px;top:12px;z-index:5;display:flex;gap:7px}.round{width:40px;height:40px;border:1px solid var(--line);border-radius:11px;background:#ffffffed}
-.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);pointer-events:none}.empty h2{color:#27303e}
-.selection{position:absolute;z-index:8;left:50%;bottom:18px;transform:translateX(-50%);display:none;align-items:center;gap:7px;background:#ffffffef;border:1px solid #cfd4df;border-radius:12px;padding:7px 9px;box-shadow:0 10px 35px #26324722}
-.selection .name{max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.selection button{border:1px solid #d2d7e0;background:#fff;border-radius:8px;padding:7px 9px}.hide{color:#a52f2f}
-.hidden{position:absolute;right:12px;bottom:70px;z-index:8;display:none;max-width:300px;background:#ffffffef;border:1px solid var(--line);border-radius:12px;padding:7px;box-shadow:0 12px 40px #26324722}.hidden button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:8px;border-radius:7px}
-.toast{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:20;display:none;background:#202633f5;color:#fff;border-radius:10px;padding:9px 13px;max-width:90vw;text-align:center;font-size:13px}
-.progress{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;display:none;background:#fff;border:1px solid var(--line);border-radius:13px;padding:15px;width:min(320px,85%);box-shadow:0 20px 60px #0002}.bar{height:6px;background:#e2e5eb;border-radius:9px;overflow:hidden;margin-top:9px}.bar i{display:block;height:100%;width:0;background:#5b55d6}
-@media(max-width:720px){.card{padding:28px}.panel{left:9px;right:9px;bottom:9px;top:auto;width:auto}.selection{bottom:205px;max-width:calc(100% - 18px)}}
-</style>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f6f8">
+  <title>OBJ 3D Viewer</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<section class="home" id="home"><div class="card"><div class="eyebrow">ModelView · 3D Viewer</div><h1>3D-модель прямо в браузере.</h1><p>Стабильный просмотр OBJ + MTL + текстур из ZIP. Светлая тема, постоянное освещение, каркас и скрытие отдельных элементов.</p><button class="start" id="start">Открыть просмотрщик →</button></div></section>
+  <header class="topbar">
+    <div>
+      <b>OBJ 3D Viewer</b>
+      <span id="status">Выберите OBJ или ZIP</span>
+    </div>
+    <label class="file-btn">Открыть файл
+      <input id="fileInput" type="file" accept=".obj,.zip,.mtl,.jpg,.jpeg,.png,.bmp" multiple>
+    </label>
+  </header>
 
-<section class="viewer" id="viewer">
-<header class="topbar"><div class="brand">◇ ModelView<small>3D Viewer</small></div><div class="actions"><label class="btn primary">＋ Открыть<input id="file" type="file" accept=".zip,.obj,.dae,.glb,.gltf" hidden></label></div></header>
-<main class="stage" id="stage">
-<div class="empty" id="empty"><div><div style="font-size:48px">◇</div><h2>Откройте 3D-модель</h2><p>ZIP с OBJ + MTL + текстурами</p></div></div>
-<canvas id="canvas"></canvas>
-<div class="panel"><div class="drop">📦<b>Добавить модель</b><span>ZIP с OBJ + MTL + текстурами</span><label class="pick">Выбрать файл<input id="file2" type="file" accept=".zip,.obj,.dae,.glb,.gltf" hidden></label></div><div class="tools"><button class="tool" id="wire">⌗ Каркас</button><button class="tool" id="fit">◉ Вписать</button></div></div>
-<div class="side"><button class="round" id="reset">↺</button><button class="round" id="full">⛶</button></div>
-<div class="selection" id="selection"><span class="name" id="selectedName">Элемент</span><button class="hide" id="hideSelected">Скрыть</button><button id="clearSelection">Отмена</button></div>
-<div class="hidden" id="hiddenList"></div>
-<div class="toast" id="toast"></div>
-<div class="progress" id="progress">Открываем модель…<div class="bar"><i id="bar"></i></div></div>
-</main></section>
+  <main>
+    <section id="drop" class="drop">
+      <div class="drop-title">Перетащите сюда OBJ или ZIP</div>
+      <div class="drop-sub">Для текстур лучше загружать ZIP: внутри должны быть OBJ, MTL и папка с текстурами.</div>
+      <button id="openBtn">Выбрать файл</button>
+    </section>
 
-<script type="module">
-import * as THREE from "three";
-import {OrbitControls} from "three/addons/controls/OrbitControls.js";
-import {OBJLoader} from "three/addons/loaders/OBJLoader.js";
-import {MTLLoader} from "three/addons/loaders/MTLLoader.js";
-import JSZip from "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm";
+    <div id="viewer" class="viewer hidden">
+      <canvas id="canvas"></canvas>
 
-const $=id=>document.getElementById(id);
-let scene,camera,renderer,controls,model=null,wire=false,selected=null,selectedBox=null,hidden=[];
-let objectURLs=[],raycaster=new THREE.Raycaster(),down=null;
+      <div class="controls">
+        <button id="fitBtn">Вписать</button>
+        <button id="textureBtn" class="active">Текстуры</button>
+        <button id="wireBtn">Каркас</button>
+        <button id="resetBtn">Сброс</button>
+      </div>
 
-function toast(s){const e=$("toast");e.textContent=s;e.style.display="block";clearTimeout(window.__toast);window.__toast=setTimeout(()=>e.style.display="none",3500)}
-function init(){
- if(renderer)return;
- scene=new THREE.Scene();scene.background=new THREE.Color(0xf0f2f5);
- camera=new THREE.PerspectiveCamera(45,1,.001,100000);camera.position.set(4,3,5);
- renderer=new THREE.WebGLRenderer({canvas:$("canvas"),antialias:true,preserveDrawingBuffer:false});
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;
- controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.screenSpacePanning=true;controls.rotateSpeed=.72;controls.zoomSpeed=.9;controls.panSpeed=.75;
- scene.add(new THREE.HemisphereLight(0xffffff,0x9ca3ad,1.05));
- const key=new THREE.DirectionalLight(0xffffff,1.15);key.position.set(5,8,5);scene.add(key);
- const fill=new THREE.DirectionalLight(0xffffff,.45);fill.position.set(-4,3,-5);scene.add(fill);
- renderer.domElement.addEventListener("pointerdown",e=>down={x:e.clientX,y:e.clientY,t:performance.now()});
- renderer.domElement.addEventListener("pointerup",e=>{if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<6&&performance.now()-down.t<500)pick(e);down=null});
- window.addEventListener("resize",resize);resize();animate();
-}
-function resize(){if(!renderer)return;const r=$("stage").getBoundingClientRect();camera.aspect=r.width/r.height;camera.updateProjectionMatrix();renderer.setSize(r.width,r.height,false)}
-function clearURLs(){for(const u of objectURLs)try{URL.revokeObjectURL(u)}catch{}objectURLs=[]}
-function fit(o){
- const b=new THREE.Box3().setFromObject(o);if(b.isEmpty())return;
- const s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3()),r=Math.max(s.x,s.y,s.z)||1;
- const d=r/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));
- camera.position.copy(c).add(new THREE.Vector3(1,.75,1).normalize().multiplyScalar(d*1.55));controls.target.copy(c);controls.minDistance=r*.005;controls.maxDistance=r*100;controls.update();
-}
-function makeWire(){
- if(!model)return;
- model.traverse(m=>{
-  if(!m.isMesh)return;
-  if(m.userData.__wire){m.remove(m.userData.__wire);m.userData.__wire.geometry.dispose();m.userData.__wire.material.dispose();m.userData.__wire=null}
-  if(!wire)return;
-  const g=new THREE.EdgesGeometry(m.geometry,1);
-  const mat=new THREE.LineBasicMaterial({color:0x596273,opacity:.72,transparent:true,depthTest:true,depthWrite:false,toneMapped:false});
-  const l=new THREE.LineSegments(g,mat);l.renderOrder=2;m.add(l);m.userData.__wire=l;
- });
-}
-function clearSelection(){
- if(selectedBox){scene.remove(selectedBox);selectedBox.geometry.dispose();selectedBox.material.dispose();selectedBox=null}
- selected=null;$("selection").style.display="none";
-}
-function pick(e){
- if(!model)return;
- const r=renderer.domElement.getBoundingClientRect();
- raycaster.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2+1)),camera);
- const hits=raycaster.intersectObject(model,true).filter(h=>h.object.isMesh&&h.object.visible&&!h.object.userData.__wire);
- if(!hits.length)return;
- const mesh=hits[0].object;clearSelection();selected=mesh;
- const box=new THREE.Box3().setFromObject(mesh);
- selectedBox=new THREE.Box3Helper(box,0x5b55d6);selectedBox.material.depthTest=false;selectedBox.material.depthWrite=false;scene.add(selectedBox);
- $("selectedName").textContent=mesh.userData.partName||mesh.name||"Элемент";
- $("selection").style.display="flex";
-}
-function hideSelected(){
- if(!selected)return;
- selected.visible=false;hidden.push(selected);clearSelection();renderHidden();toast("Элемент скрыт");
-}
-function renderHidden(){
- const e=$("hiddenList");
- if(!hidden.length){e.style.display="none";e.innerHTML="";return}
- e.innerHTML="";
- hidden.forEach((m,i)=>{const b=document.createElement("button");b.textContent="👁 "+(m.userData.partName||m.name||("Элемент "+(i+1)));b.onclick=()=>{m.visible=true;hidden.splice(i,1);renderHidden()};e.appendChild(b)});
- e.style.display="block";
-}
-function norm(s){try{s=decodeURIComponent(s)}catch{}return String(s||"").replace(/\\/g,"/").replace(/^\.?\//,"").toLowerCase()}
-async function zipToURLs(file){
- const zip=await JSZip.loadAsync(file);
- const all=Object.keys(zip.files).filter(n=>!zip.files[n].dir);
- const objName=all.find(n=>/\.obj$/i.test(n));
- const mtlName=all.find(n=>/\.mtl$/i.test(n));
- if(!objName)throw Error("В ZIP нет OBJ");
- if(!mtlName)throw Error("В ZIP нет MTL");
- // Создаём URL только для OBJ, MTL и файлов изображений.
- const needed=all.filter(n=>n===objName||n===mtlName||/\.(png|jpe?g|webp|gif|bmp)$/i.test(n));
- const map=new Map();
- for(let i=0;i<needed.length;i++){
-   const n=needed[i],blob=await zip.files[n].async("blob"),u=URL.createObjectURL(blob);objectURLs.push(u);
-   map.set(norm(n),u);map.set(norm(n).split("/").pop(),u);
-   $("bar").style.width=Math.round(15+(i+1)/needed.length*35)+"%";
- }
- const manager=new THREE.LoadingManager();
- manager.setURLModifier(req=>map.get(norm(req))||map.get(norm(req).split("/").pop())||req);
- return {obj:map.get(norm(objName)),mtl:map.get(norm(mtlName)),manager,name:objName};
-}
-async function load(file){
- init();$("progress").style.display="block";$("bar").style.width="5%";clearURLs();clearSelection();hidden=[];
- try{
-   if(!/\.zip$/i.test(file.name))throw Error("Загружайте ZIP с OBJ + MTL + текстурами");
-   const z=await zipToURLs(file);$("bar").style.width="55%";
-   const mtl=await new Promise((resolve,reject)=>new MTLLoader(z.manager).load(z.mtl,resolve,undefined,reject));
-   mtl.preload();$("bar").style.width="70%";
-   const root=await new Promise((resolve,reject)=>new OBJLoader(z.manager).setMaterials(mtl).load(z.obj,resolve,undefined,reject));
-   $("bar").style.width="90%";
-   if(model){scene.remove(model);model=null}
-   model=root;
-   model.traverse(m=>{
-     if(m.isMesh){
-       m.userData.partName=m.name||m.parent?.name||"Деталь";
-       const mats=Array.isArray(m.material)?m.material:[m.material];
-       mats.forEach(x=>{
-       if(!x)return;
-       if(x.map)x.map.colorSpace=THREE.SRGBColorSpace;
-       // Furniture OBJ exports often contain coplanar/near-coplanar faces.
-       // Keep materials opaque and use a small polygon offset to suppress z-fighting.
-       x.transparent=false;
-       x.opacity=1;
-       x.depthTest=true;
-       x.depthWrite=true;
-       x.side=THREE.FrontSide;
-       x.polygonOffset=true;
-       x.polygonOffsetFactor=1;
-       x.polygonOffsetUnits=1;
-       x.alphaTest=x.map?.format===THREE.RGBAFormat ? 0.02 : 0;
-       x.needsUpdate=true;
-     });
-     }
-   });
-   scene.add(model);wire=false;$("wire").classList.remove("active");makeWire();fit(model);
-   $("empty").style.display="none";$("bar").style.width="100%";toast("Модель загружена: "+z.name);
- }catch(e){console.error(e);toast("Ошибка загрузки: "+(e?.message||"не удалось открыть файл"))}
- finally{setTimeout(()=>$("progress").style.display="none",450)}
-}
-function animate(){requestAnimationFrame(animate);if(renderer){controls.update();renderer.render(scene,camera)}}
+      <div class="help">
+        <span>ПК: ЛКМ — вращение · колесо — масштаб · ПКМ — панорама</span>
+        <span>Телефон: 1 палец — вращение · 2 пальца — масштаб/панорама</span>
+      </div>
+    </div>
 
-$("start").onclick=()=>{$("home").style.display="none";$("viewer").style.display="block";init()};
-$("file").onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value=""};
-$("file2").onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value=""};
-$("wire").onclick=()=>{wire=!wire;$("wire").classList.toggle("active",wire);makeWire()};
-$("fit").onclick=()=>model&&fit(model);$("reset").onclick=()=>model&&fit(model);
-$("full").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
-$("hideSelected").onclick=hideSelected;$("clearSelection").onclick=clearSelection;
-</script>
-</body></html>
+    <aside id="partsPanel" class="parts hidden">
+      <div class="parts-head">
+        <b>Детали</b>
+        <button id="showAllBtn">Показать все</button>
+      </div>
+      <div id="partsList"></div>
+      <div class="hint">Нажмите на деталь в модели — она выделится. Кнопка «Скрыть» убирает только выбранную деталь.</div>
+    </aside>
+  </main>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
