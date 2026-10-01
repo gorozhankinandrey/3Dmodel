@@ -66,11 +66,11 @@ function init(){
  scene=new THREE.Scene();scene.background=new THREE.Color(0xf0f2f5);
  camera=new THREE.PerspectiveCamera(45,1,.001,100000);camera.position.set(4,3,5);
  renderer=new THREE.WebGLRenderer({canvas:$("canvas"),antialias:true,preserveDrawingBuffer:false});
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;
  controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.screenSpacePanning=true;controls.rotateSpeed=.72;controls.zoomSpeed=.9;controls.panSpeed=.75;
- scene.add(new THREE.HemisphereLight(0xffffff,0x9ca3ad,1.9));
- const key=new THREE.DirectionalLight(0xffffff,2.0);key.position.set(5,8,5);scene.add(key);
- const fill=new THREE.DirectionalLight(0xffffff,.9);fill.position.set(-4,3,-5);scene.add(fill);
+ scene.add(new THREE.HemisphereLight(0xffffff,0x9ca3ad,1.05));
+ const key=new THREE.DirectionalLight(0xffffff,1.15);key.position.set(5,8,5);scene.add(key);
+ const fill=new THREE.DirectionalLight(0xffffff,.45);fill.position.set(-4,3,-5);scene.add(fill);
  renderer.domElement.addEventListener("pointerdown",e=>down={x:e.clientX,y:e.clientY,t:performance.now()});
  renderer.domElement.addEventListener("pointerup",e=>{if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<6&&performance.now()-down.t<500)pick(e);down=null});
  window.addEventListener("resize",resize);resize();animate();
@@ -90,7 +90,7 @@ function makeWire(){
   if(m.userData.__wire){m.remove(m.userData.__wire);m.userData.__wire.geometry.dispose();m.userData.__wire.material.dispose();m.userData.__wire=null}
   if(!wire)return;
   const g=new THREE.EdgesGeometry(m.geometry,1);
-  const mat=new THREE.LineBasicMaterial({color:0x596273,opacity:.8,transparent:true,depthTest:true,depthWrite:false,toneMapped:false});
+  const mat=new THREE.LineBasicMaterial({color:0x596273,opacity:.72,transparent:true,depthTest:true,depthWrite:false,toneMapped:false});
   const l=new THREE.LineSegments(g,mat);l.renderOrder=2;m.add(l);m.userData.__wire=l;
  });
 }
@@ -156,7 +156,22 @@ async function load(file){
      if(m.isMesh){
        m.userData.partName=m.name||m.parent?.name||"Деталь";
        const mats=Array.isArray(m.material)?m.material:[m.material];
-       mats.forEach(x=>{if(x?.map)x.map.colorSpace=THREE.SRGBColorSpace});
+       mats.forEach(x=>{
+       if(!x)return;
+       if(x.map)x.map.colorSpace=THREE.SRGBColorSpace;
+       // Furniture OBJ exports often contain coplanar/near-coplanar faces.
+       // Keep materials opaque and use a small polygon offset to suppress z-fighting.
+       x.transparent=false;
+       x.opacity=1;
+       x.depthTest=true;
+       x.depthWrite=true;
+       x.side=THREE.FrontSide;
+       x.polygonOffset=true;
+       x.polygonOffsetFactor=1;
+       x.polygonOffsetUnits=1;
+       x.alphaTest=x.map?.format===THREE.RGBAFormat ? 0.02 : 0;
+       x.needsUpdate=true;
+     });
      }
    });
    scene.add(model);wire=false;$("wire").classList.remove("active");makeWire();fit(model);
