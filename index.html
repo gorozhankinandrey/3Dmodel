@@ -3,403 +3,157 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f5f6f8">
-<title>ModelView — 3D Viewer</title>
+<meta name="theme-color" content="#f4f5f7">
+<title>ModelView 3D</title>
 <style>
-:root{
-  --bg:#f5f6f8;--stage:#eef0f3;--panel:#ffffffee;--line:#d9dde5;
-  --text:#18202b;--muted:#687386;--accent:#5b55d6;--danger:#c43d3d;
-}
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
-font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-button{font:inherit}
-.home{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#fff,#edf0f5);z-index:20}
-.home-card{width:min(1050px,100%);display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
-.hero,.features{background:#fffffff2;border:1px solid var(--line);border-radius:24px;box-shadow:0 20px 70px #26324718}
-.hero{padding:48px}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.18em;color:#5952c9;font-weight:800}
-.hero h1{font-size:clamp(40px,7vw,72px);line-height:.95;margin:15px 0;color:#18202b}
-.hero p{max-width:650px;color:var(--muted);line-height:1.7}
-.start{margin-top:18px;border:0;border-radius:12px;padding:14px 20px;background:#5b55d6;color:white;font-weight:750;cursor:pointer}
-.formats{margin-top:18px;color:#778195;font-size:12px}
-.features{padding:28px}.features h2{margin:0 0 14px;font-size:20px}
-.feature{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #e8ebf0;color:#3f4858}.feature:last-child{border:0}
-.viewer{display:none;position:fixed;inset:0}.topbar{height:62px;display:flex;align-items:center;gap:12px;padding:9px 14px;background:#fffffff2;border-bottom:1px solid var(--line);position:absolute;inset:0 0 auto;z-index:10;backdrop-filter:blur(18px)}
-.brand{display:flex;gap:9px;align-items:center;min-width:180px}.logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#5b55d6;color:#fff}
-.brand small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
-.actions{margin-left:auto;display:flex;gap:8px}.btn{height:38px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text);cursor:pointer}
-.primary{background:#5b55d6;border-color:#5b55d6;color:#fff}
-.stage{position:absolute;inset:62px 0 0;background:var(--stage)}
-canvas{width:100%;height:100%;display:block;touch-action:none}
-.panel{position:absolute;top:14px;left:14px;width:286px;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;backdrop-filter:blur(18px);box-shadow:0 15px 50px #26324718}
-.dropzone{border:1px dashed #b9c0cd;border-radius:12px;padding:14px;text-align:center;color:var(--muted)}
-.dropzone strong{display:block;color:var(--text);margin:5px}.filebtn{display:block;margin-top:10px;padding:10px;border-radius:9px;background:#eef0f5;color:var(--text);cursor:pointer}
-.tools{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.tool{height:36px;border:1px solid var(--line);background:#fff;color:#384152;border-radius:9px;cursor:pointer}
-.tool.active{background:#eceaff;border-color:#8d87df;color:#3e389e}
-.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;color:#3f4858;font-size:13px}
-.switch{appearance:none;width:38px;height:21px;border-radius:20px;background:#c8ced8;position:relative;cursor:pointer}
-.switch:before{content:"";position:absolute;width:17px;height:17px;top:2px;left:2px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0002;transition:.18s}
-.switch:checked{background:#655fe0}.switch:checked:before{left:19px}
-.side{position:absolute;right:14px;top:14px;display:flex;flex-direction:column;gap:8px;z-index:5}
-.round{width:42px;height:42px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);cursor:pointer}
-.bottom{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:4px;padding:5px;background:var(--panel);border:1px solid var(--line);border-radius:13px}
-.bottom button{width:38px;height:34px;border:0;border-radius:8px;background:transparent;color:#3f4858;cursor:pointer}
-.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);pointer-events:none}
-.empty h2{color:#27303e;margin:8px 0}.toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:30;background:#202633f5;color:#fff;border:1px solid #3b4659;border-radius:11px;padding:10px 14px;display:none;max-width:min(92vw,600px);text-align:center}
-.progress{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(320px,80%);background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;z-index:20;display:none;box-shadow:0 20px 60px #0002}
-.bar{height:7px;background:#e2e5eb;border-radius:9px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;width:0;background:#5b55d6}
-.info{font-size:11px;color:var(--muted);margin-top:8px}
-.selection{position:absolute;left:50%;bottom:68px;transform:translateX(-50%);z-index:8;display:none;align-items:center;gap:8px;padding:8px 10px;background:#ffffffef;border:1px solid #cfd4df;border-radius:12px;box-shadow:0 10px 35px #26324722;backdrop-filter:blur(12px)}
-.selection .name{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
-.selection button{border:1px solid #d2d7e0;background:#fff;border-radius:8px;padding:7px 9px;cursor:pointer}.selection .hide{color:#a52f2f}
-.hidden-list{position:absolute;right:14px;bottom:72px;z-index:7;display:none;max-width:280px;background:#ffffffef;border:1px solid var(--line);border-radius:12px;padding:8px;box-shadow:0 12px 40px #26324722}
-.hidden-list button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:8px;border-radius:8px;cursor:pointer;color:#3f4858}
-.hidden-list button:hover{background:#eef0f5}
-@media(max-width:720px){
- .home-card{grid-template-columns:1fr}.features{display:none}.hero{padding:30px}
- .panel{width:calc(100% - 20px);left:10px;top:auto;bottom:56px}
- .panel .optional{display:none}.brand{min-width:auto}.brand small{display:none}.actions .help{display:none}
- .selection{bottom:104px;max-width:calc(100% - 20px)}.hidden-list{right:10px;bottom:56px}
-}
+:root{--bg:#f4f5f7;--stage:#eef0f3;--panel:#ffffffef;--line:#d9dde5;--text:#18202b;--muted:#687386;--accent:#5b55d6}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button{font:inherit;cursor:pointer}.home{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#fff,#edf0f5);z-index:20}.card{width:min(980px,100%);background:#fffffff2;border:1px solid var(--line);border-radius:24px;box-shadow:0 20px 70px #26324718;padding:42px}.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#5b55d6;font-weight:800}.card h1{font-size:clamp(38px,7vw,68px);line-height:.96;margin:14px 0}.card p{color:var(--muted);line-height:1.65}.start{border:0;border-radius:11px;background:#5b55d6;color:white;padding:13px 19px;font-weight:750}.viewer{display:none;position:fixed;inset:0}.topbar{height:60px;position:absolute;z-index:10;inset:0 0 auto;display:flex;align-items:center;padding:8px 12px;gap:10px;background:#fffffff2;border-bottom:1px solid var(--line);backdrop-filter:blur(16px)}.brand{font-weight:800}.brand small{display:block;color:var(--muted);font-size:10px;font-weight:500}.actions{margin-left:auto}.btn{height:38px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text)}.primary{background:#5b55d6;border-color:#5b55d6;color:#fff}.stage{position:absolute;inset:60px 0 0;background:var(--stage)}canvas{display:block;width:100%;height:100%;touch-action:none}.panel{position:absolute;left:12px;top:12px;width:280px;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:12px;backdrop-filter:blur(15px);box-shadow:0 12px 40px #26324718}.drop{border:1px dashed #b9c0cd;border-radius:11px;padding:12px;text-align:center;color:var(--muted);font-size:12px}.drop b{display:block;color:var(--text);font-size:13px;margin:3px}.pick{display:block;margin-top:9px;padding:9px;border-radius:9px;background:#eef0f5;color:#27303e;cursor:pointer}.tools{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.tool{height:36px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#3f4858}.tool.active{background:#eceaff;border-color:#8d87df;color:#3e389e}.side{position:absolute;right:12px;top:12px;z-index:5;display:flex;gap:7px}.round{width:40px;height:40px;border:1px solid var(--line);border-radius:11px;background:var(--panel)}.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);pointer-events:none}.empty h2{color:#27303e}.selection{position:absolute;z-index:8;left:50%;bottom:18px;transform:translateX(-50%);display:none;align-items:center;gap:7px;background:#ffffffef;border:1px solid #cfd4df;border-radius:12px;padding:7px 9px;box-shadow:0 10px 35px #26324722;backdrop-filter:blur(12px)}.selection .name{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.selection button{border:1px solid #d2d7e0;background:#fff;border-radius:8px;padding:7px 9px}.hide{color:#a52f2f}.hidden{position:absolute;right:12px;bottom:70px;z-index:8;display:none;max-width:290px;background:#ffffffef;border:1px solid var(--line);border-radius:12px;padding:7px;box-shadow:0 12px 40px #26324722}.hidden button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:8px;border-radius:7px}.hidden button:hover{background:#eef0f5}.toast{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:20;display:none;background:#202633f5;color:#fff;border-radius:10px;padding:9px 13px;max-width:90vw;text-align:center;font-size:13px}.progress{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;display:none;background:#fff;border:1px solid var(--line);border-radius:13px;padding:15px;width:min(320px,85%);box-shadow:0 20px 60px #0002}.bar{height:6px;background:#e2e5eb;border-radius:9px;overflow:hidden;margin-top:9px}.bar i{display:block;height:100%;width:0;background:#5b55d6}@media(max-width:720px){.card{padding:28px}.panel{left:9px;right:9px;bottom:9px;top:auto;width:auto}.selection{bottom:205px;max-width:calc(100% - 18px)}}
 </style>
-<script type="importmap">
-{"imports":{
-"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-}}
-</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
-<section class="home" id="home">
- <div class="home-card">
-  <div class="hero"><div class="eyebrow">100% browser · бесплатно</div>
-   <h1>Смотрите 3D-модели прямо на сайте.</h1>
-   <p>OBJ, DAE, GLB, GLTF, FBX и ZIP с текстурами. Всё обрабатывается прямо на устройстве.</p>
-   <button class="start" id="start" type="button">Открыть 3D-модель →</button>
-   <div class="formats">OBJ · MTL · DAE · GLB · GLTF · STL · PLY · FBX · ZIP</div>
-  </div>
-  <div class="features"><h2>Возможности</h2>
-   <div class="feature">◈ Удобное управление пальцами на телефоне</div>
-   <div class="feature">⌗ Каркас только по видимым граням</div>
-   <div class="feature">▣ Выбор конкретного элемента и скрытие</div>
-   <div class="feature">☼ Стабильное освещение без мерцания</div>
-   <div class="feature">▣ Светлая тема</div>
-  </div>
- </div>
-</section>
+<section class="home" id="home"><div class="card"><div class="eyebrow">ModelView · 3D Viewer</div><h1>3D-модель прямо в браузере.</h1><p>OBJ, MTL и ZIP с текстурами. Светлая тема, стабильное освещение, каркас по видимым граням и выбор отдельных элементов.</p><button class="start" id="start">Открыть просмотрщик →</button></div></section>
 
 <section class="viewer" id="viewer">
-<header class="topbar">
- <div class="brand"><div class="logo">◇</div><div><b>ModelView</b><small>3D Viewer</small></div></div>
- <div class="actions">
-  <label class="btn primary">＋ Открыть<input id="file" type="file" accept=".3ds,.dae,.glb,.gltf,.obj,.stl,.ply,.fbx,.zip" hidden></label>
-  <button class="btn help" id="help">?</button>
- </div>
-</header>
+<header class="topbar"><div class="brand">◇ ModelView<small>3D Viewer</small></div><div class="actions"><label class="btn primary">＋ Открыть<input id="file" type="file" accept=".obj,.mtl,.dae,.glb,.gltf,.fbx,.3ds,.stl,.ply,.zip" hidden></label></div></header>
 <main class="stage" id="stage">
- <div class="empty" id="empty"><div><div style="font-size:50px">◇</div><h2>Откройте 3D-модель</h2><p>OBJ/DAE/GLB или ZIP с текстурами</p></div></div>
- <canvas id="canvas"></canvas>
-
- <div class="panel">
-  <div class="dropzone">📦<strong>Добавить модель</strong><span>до 300 МБ · обработка только на устройстве</span>
-   <label class="filebtn">Выбрать файл<input id="file2" type="file" accept=".3ds,.dae,.glb,.gltf,.obj,.stl,.ply,.fbx,.zip" hidden></label>
-  </div>
-  <div class="tools"><button class="tool" id="wire">⌗ Каркас</button><button class="tool" id="fit">◉ Вписать</button></div>
-  <div class="row">Сетка <input class="switch" id="grid" type="checkbox" checked></div>
-  <div class="row">Автовращение <input class="switch" id="auto" type="checkbox"></div>
-  <div class="row">Освещение <input class="switch" id="light" type="checkbox" checked></div>
-  <div class="row"><span>Скрытые элементы</span><button class="btn" id="showHidden" style="height:30px;padding:0 8px">Показать</button></div>
- </div>
-
- <div class="side"><button class="round" id="reset">↺</button><button class="round" id="full">⛶</button></div>
-
- <div class="selection" id="selection">
-   <span class="name" id="selectedName">Элемент</span>
-   <button class="hide" id="hideSelected">Скрыть</button>
-   <button id="clearSelection">Отмена</button>
- </div>
-
- <div class="hidden-list" id="hiddenList"></div>
-
- <div class="bottom"><button id="front">●</button><button id="top">▲</button><button id="side">■</button><button id="iso">◇</button></div>
- <div class="toast" id="toast"></div>
- <div class="progress" id="progress">Открываем модель…<div class="bar"><i id="bar"></i></div><div class="info">Обработка выполняется на устройстве</div></div>
-</main>
-</section>
+<div class="empty" id="empty"><div><div style="font-size:48px">◇</div><h2>Откройте 3D-модель</h2><p>OBJ или ZIP с OBJ + MTL + текстурами</p></div></div>
+<canvas id="canvas"></canvas>
+<div class="panel"><div class="drop">📦<b>Добавить модель</b><span>OBJ / DAE / GLB / ZIP с текстурами</span><label class="pick">Выбрать файл<input id="file2" type="file" accept=".obj,.mtl,.dae,.glb,.gltf,.fbx,.3ds,.stl,.ply,.zip" hidden></label></div><div class="tools"><button class="tool" id="wire">⌗ Каркас</button><button class="tool" id="fit">◉ Вписать</button></div></div>
+<div class="side"><button class="round" id="reset">↺</button><button class="round" id="full">⛶</button></div>
+<div class="selection" id="selection"><span class="name" id="selectedName">Элемент</span><button class="hide" id="hideSelected">Скрыть</button><button id="clearSelection">Отмена</button></div>
+<div class="hidden" id="hiddenList"></div>
+<div class="toast" id="toast"></div>
+<div class="progress" id="progress">Открываем модель…<div class="bar"><i id="bar"></i></div></div>
+</main></section>
 
 <script type="module">
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { ColladaLoader } from "three/addons/loaders/ColladaLoader.js";
-import { TDSLoader } from "three/addons/loaders/TDSLoader.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
-import { STLLoader } from "three/addons/loaders/STLLoader.js";
-import { PLYLoader } from "three/addons/loaders/PLYLoader.js";
-import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+import {OBJLoader} from "three/addons/loaders/OBJLoader.js";
+import {MTLLoader} from "three/addons/loaders/MTLLoader.js";
+import {ColladaLoader} from "three/addons/loaders/ColladaLoader.js";
+import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import JSZip from "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm";
 
 const $=id=>document.getElementById(id);
-let scene,camera,renderer,controls,grid,model=null,radius=3,autoRotate=false,wire=false;
-let lights=[],blobUrls=[],selected=null,selectionOutline=null,hiddenItems=[];
-let pointerDown=null, initialized=false;
+let scene,camera,renderer,controls,model=null,wire=false,selected=null,outline=null,hidden=[];
+let urls=[],ray=new THREE.Raycaster(),pointer={x:0,y:0,downX:0,downY:0,downT:0};
+const texExt=/\.(jpg|jpeg|png|webp|gif|bmp|tga)$/i;
 
-function toast(msg){
- const el=$("toast"); el.textContent=msg; el.style.display="block";
- clearTimeout(window.__toastTimer); window.__toastTimer=setTimeout(()=>el.style.display="none",3500);
-}
-function resize(){
- if(!renderer)return;
- const r=$("stage").getBoundingClientRect();
- if(!r.width||!r.height)return;
- camera.aspect=r.width/r.height; camera.updateProjectionMatrix();
- renderer.setSize(r.width,r.height,false);
-}
+function toast(s){let e=$("toast");e.textContent=s;e.style.display="block";clearTimeout(window.t);window.t=setTimeout(()=>e.style.display="none",3200)}
 function init(){
- if(initialized)return true;
- initialized=true;
- scene=new THREE.Scene();
- scene.background=new THREE.Color(0xf0f2f5);
- camera=new THREE.PerspectiveCamera(45,1,.01,100000);
- camera.position.set(4,3,5);
- renderer=new THREE.WebGLRenderer({canvas:$("canvas"),antialias:true,preserveDrawingBuffer:false});
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
- renderer.outputColorSpace=THREE.SRGBColorSpace;
- renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.0;
- controls=new OrbitControls(camera,renderer.domElement);
- controls.enableDamping=true; controls.dampingFactor=.075;
- controls.screenSpacePanning=true;
- controls.rotateSpeed=.75; controls.zoomSpeed=.9; controls.panSpeed=.75;
- controls.minPolarAngle=.02; controls.maxPolarAngle=Math.PI-.02;
-
- const hemi=new THREE.HemisphereLight(0xffffff,0x9aa0aa,1.8);
- const key=new THREE.DirectionalLight(0xffffff,2.2); key.position.set(5,8,5);
- const fill=new THREE.DirectionalLight(0xffffff,1.0); fill.position.set(-5,3,-4);
- lights=[hemi,key,fill]; lights.forEach(l=>scene.add(l));
-
- grid=new THREE.GridHelper(20,20,0x9ca3af,0xd4d8de); scene.add(grid);
- resize(); animate(); return true;
+ if(renderer)return;
+ scene=new THREE.Scene();scene.background=new THREE.Color(0xf0f2f5);
+ camera=new THREE.PerspectiveCamera(45,1,.001,100000);camera.position.set(4,3,5);
+ renderer=new THREE.WebGLRenderer({canvas:$("canvas"),antialias:true});
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;
+ renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+ controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.screenSpacePanning=true;controls.rotateSpeed=.72;controls.zoomSpeed=.9;controls.panSpeed=.75;
+ // Освещение создаётся один раз и больше никогда не переключается.
+ scene.add(new THREE.HemisphereLight(0xffffff,0x9ca3ad,1.9));
+ const k=new THREE.DirectionalLight(0xffffff,2.1);k.position.set(5,8,5);scene.add(k);
+ const f=new THREE.DirectionalLight(0xffffff,1.0);f.position.set(-4,3,-5);scene.add(f);
+ renderer.domElement.addEventListener("pointerdown",e=>{pointer.downX=e.clientX;pointer.downY=e.clientY;pointer.downT=performance.now()});
+ renderer.domElement.addEventListener("pointerup",e=>{if(Math.hypot(e.clientX-pointer.downX,e.clientY-pointer.downY)<6&&performance.now()-pointer.downT<500)pick(e)});
+ window.addEventListener("resize",resize);resize();animate();
 }
-function dispose(obj){
- if(!obj)return;
- obj.traverse(x=>{
-   if(x.userData.__edgeLines){x.userData.__edgeLines.geometry.dispose();x.userData.__edgeLines.material.dispose();}
-   if(x.geometry)x.geometry.dispose();
-   const mats=x.material?(Array.isArray(x.material)?x.material:[x.material]):[];
-   mats.forEach(m=>{
-    ["map","normalMap","roughnessMap","metalnessMap","emissiveMap","aoMap","alphaMap","bumpMap","displacementMap"].forEach(k=>{if(m[k]?.dispose)m[k].dispose()});
-    m.dispose?.();
-   });
- });
+function resize(){if(!renderer)return;let r=$("stage").getBoundingClientRect();camera.aspect=r.width/r.height;camera.updateProjectionMatrix();renderer.setSize(r.width,r.height,false)}
+function cleanup(){urls.forEach(u=>URL.revokeObjectURL(u));urls=[]}
+function dispose(o){o.traverse(x=>{if(x.geometry)x.geometry.dispose();if(x.material){let ms=Array.isArray(x.material)?x.material:[x.material];ms.forEach(m=>m.dispose())}})}
+function fit(o){let b=new THREE.Box3().setFromObject(o);if(b.isEmpty())return;let s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3()),r=Math.max(s.x,s.y,s.z)||1,d=r/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));camera.position.copy(c).add(new THREE.Vector3(1,.75,1).normalize().multiplyScalar(d*1.55));controls.target.copy(c);controls.minDistance=r*.005;controls.maxDistance=r*100;controls.update()}
+function edgeWire(o){
+ o.traverse(m=>{
+  if(!m.isMesh)return;
+  if(m.userData.edge){m.remove(m.userData.edge);m.userData.edge.geometry.dispose();m.userData.edge.material.dispose()}
+  // EdgesGeometry + depthTest: задние ребра не рисуются поверх передних.
+  const g=new THREE.EdgesGeometry(m.geometry,1);
+  const mat=new THREE.LineBasicMaterial({color:0x596273,transparent:true,opacity:.8,depthTest:true,depthWrite:false,toneMapped:false});
+  const l=new THREE.LineSegments(g,mat);l.visible=wire;l.renderOrder=2;m.add(l);m.userData.edge=l;
+ })
 }
-function fit(obj){
- const b=new THREE.Box3().setFromObject(obj); if(b.isEmpty())return;
- const size=b.getSize(new THREE.Vector3()),center=b.getCenter(new THREE.Vector3());
- radius=Math.max(size.x,size.y,size.z)||1;
- const d=radius/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));
- camera.position.copy(center).add(new THREE.Vector3(1,.75,1).normalize().multiplyScalar(d*1.55));
- controls.target.copy(center); controls.minDistance=radius*.01; controls.maxDistance=radius*100; controls.update();
- grid.position.y=b.min.y; grid.scale.setScalar(Math.max(1,radius/20));
-}
-function addEdgeOverlay(mesh){
- if(!mesh.geometry||!mesh.geometry.attributes.position)return;
- if(mesh.userData.__edgeLines)return;
- const g=new THREE.EdgesGeometry(mesh.geometry,1);
- const m=new THREE.LineBasicMaterial({color:0x596273,transparent:true,opacity:.82,depthTest:true,depthWrite:false,toneMapped:false});
- const lines=new THREE.LineSegments(g,m);
- lines.visible=wire; lines.renderOrder=3;
- mesh.add(lines); mesh.userData.__edgeLines=lines;
-}
-function setWire(obj){
- obj.traverse(x=>{
-  if(x.isMesh)addEdgeOverlay(x);
-  if(x.userData.__edgeLines)x.userData.__edgeLines.visible=wire;
- });
-}
-function clearSelection(){
- if(selectionOutline){scene.remove(selectionOutline);selectionOutline.geometry.dispose();selectionOutline.material.dispose();selectionOutline=null;}
- selected=null; $("selection").style.display="none";
-}
-function selectMesh(mesh){
- clearSelection(); selected=mesh;
- const box=new THREE.Box3().setFromObject(mesh);
- if(!box.isEmpty()){
-   selectionOutline=new THREE.Box3Helper(box,0x5b55d6);
-   selectionOutline.material.transparent=true; selectionOutline.material.opacity=.95;
-   scene.add(selectionOutline);
- }
- const n=mesh.userData.displayName||mesh.name||"Элемент";
- $("selectedName").textContent=n;
- $("selection").style.display="flex";
-}
-function hideSelected(){
- if(!selected)return;
- selected.visible=false;
- hiddenItems.push(selected);
- clearSelection();
- renderHiddenList();
- toast("Элемент скрыт");
-}
-function showAllHidden(){
- hiddenItems.forEach(x=>x.visible=true); hiddenItems=[];
- renderHiddenList(); toast("Все скрытые элементы показаны");
-}
-function renderHiddenList(){
- const box=$("hiddenList");
- if(!hiddenItems.length){box.style.display="none";box.innerHTML="";return;}
- box.innerHTML="";
- hiddenItems.forEach((mesh,i)=>{
-   const b=document.createElement("button");
-   b.textContent="👁 "+(mesh.userData.displayName||mesh.name||"Элемент "+(i+1));
-   b.onclick=()=>{mesh.visible=true;hiddenItems=hiddenItems.filter(x=>x!==mesh);renderHiddenList();};
-   box.appendChild(b);
- });
- box.style.display="block";
-}
-function ext(name){
- const p=(name||"").split("?")[0].split("#")[0].split(".");
- return p.length>1?p.pop().toLowerCase():"";
-}
-function cleanUrls(){blobUrls.forEach(u=>{try{URL.revokeObjectURL(u)}catch{}});blobUrls=[];}
-function managerFor(entries){
- const map=new Map();
- const normalize=s=>decodeURIComponent(String(s||"")).replace(/\\/g,"/").replace(/^\.?\//,"").toLowerCase();
- for(const [name,url] of entries){
-   const n=normalize(name), base=n.split("/").pop();
-   map.set(n,url); if(base&&!map.has(base))map.set(base,url);
- }
- const manager=new THREE.LoadingManager();
- manager.setURLModifier(u=>{
-   const raw=normalize(u), base=raw.split("/").pop();
-   return map.get(raw)||map.get(base)||u;
- });
- return manager;
-}
-async function zipModel(file){
- const zip=await JSZip.loadAsync(file), entries=[];
- for(const n of Object.keys(zip.files)){
-   const item=zip.files[n]; if(item.dir)continue;
-   const blob=await item.async("blob"), url=URL.createObjectURL(blob);
-   blobUrls.push(url); entries.push([n,url]);
- }
- const priority=["glb","gltf","fbx","dae","3ds","obj","stl","ply"];
- let chosen=null;
- for(const p of priority){chosen=entries.find(e=>ext(e[0])===p);if(chosen)break;}
- if(!chosen)throw new Error("В ZIP нет поддерживаемой 3D-модели");
- return {name:chosen[0],url:chosen[1],type:ext(chosen[0]),manager:managerFor(entries)};
-}
-function labelMeshes(obj){
- let i=1;
- obj.traverse(x=>{
-   if(x.isMesh){
-     x.userData.displayName=x.name||x.parent?.name||("Элемент "+i++);
-   }
- });
-}
-function loadByType(name,url,type,manager){
- if(type==="3ds")return new Promise((res,rej)=>new TDSLoader(manager).load(url,res,undefined,rej));
- if(type==="dae")return new Promise((res,rej)=>new ColladaLoader(manager).load(url,x=>res(x.scene),undefined,rej));
- if(type==="gltf"||type==="glb")return new Promise((res,rej)=>new GLTFLoader(manager).load(url,x=>res(x.scene),undefined,rej));
- if(type==="obj")return new Promise((res,rej)=>new OBJLoader(manager).load(url,res,undefined,rej));
- if(type==="stl")return new Promise((res,rej)=>new STLLoader(manager).load(url,g=>{g.computeVertexNormals();res(new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0xc7ccd4,roughness:.55,metalness:.08})))},undefined,rej));
- if(type==="ply")return new Promise((res,rej)=>new PLYLoader(manager).load(url,g=>{g.computeVertexNormals();res(new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0xc7ccd4,roughness:.6,metalness:.05,vertexColors:!!g.getAttribute("color")})))},undefined,rej));
- if(type==="fbx")return new Promise((res,rej)=>new FBXLoader(manager).load(url,res,undefined,rej));
- return Promise.reject(new Error("Формат не поддерживается"));
-}
-async function openFile(file){
- if(!file||!init())return;
- const progress=$("progress"),bar=$("bar");progress.style.display="block";bar.style.width="10%";
- cleanUrls();clearSelection();hiddenItems=[];renderHiddenList();
- try{
-   let name=file.name,url,type=ext(name),manager=new THREE.LoadingManager();
-   if(type==="zip"){const z=await zipModel(file);({name,url,type,manager}=z);}
-   else{
-     if(!["3ds","dae","glb","gltf","obj","stl","ply","fbx"].includes(type))throw new Error("Неподдерживаемый формат: "+type);
-     url=URL.createObjectURL(file);blobUrls.push(url);
-   }
-   bar.style.width="35%";
-   const obj=await loadByType(name,url,type,manager);
-   bar.style.width="80%";
-   if(model){scene.remove(model);dispose(model);}
-   model=obj;labelMeshes(model);scene.add(model);setWire(model);fit(model);
-   $("empty").style.display="none";bar.style.width="100%";
-   toast("Модель загружена: "+name);
- }catch(err){console.error(err);toast("Не удалось открыть: "+(err.message||"проверьте OBJ/MTL/текстуры"))}
- finally{setTimeout(()=>progress.style.display="none",350)}
-}
-function raycastSelect(ev){
+function clearPick(){if(outline){scene.remove(outline);outline.geometry.dispose();outline.material.dispose();outline=null}selected=null;$("selection").style.display="none"}
+function pick(e){
  if(!model)return;
- const rect=renderer.domElement.getBoundingClientRect();
- const x=((ev.clientX-rect.left)/rect.width)*2-1;
- const y=-((ev.clientY-rect.top)/rect.height)*2+1;
- const raycaster=new THREE.Raycaster();raycaster.setFromCamera(new THREE.Vector2(x,y),camera);
- const hits=raycaster.intersectObject(model,true);
- const hit=hits.find(h=>h.object.isMesh&&h.object.visible);
- if(hit)selectMesh(hit.object);
+ const r=renderer.domElement.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1),camera);
+ const hits=ray.intersectObject(model,true).filter(h=>h.object.isMesh&&h.object.visible);
+ if(!hits.length)return;
+ // Выбираем ближайший Mesh, а не корневой Group.
+ const mesh=hits[0].object; clearPick();selected=mesh;
+ // Небольшая рамка только вокруг выбранного меша.
+ const box=new THREE.Box3().setFromObject(mesh);outline=new THREE.Box3Helper(box,0x5b55d6);outline.material.depthTest=false;outline.material.depthWrite=false;scene.add(outline);
+ $("selectedName").textContent=mesh.userData.label||mesh.name||"Элемент";$("selection").style.display="flex";
 }
-function showViewer(){$("home").style.display="none";$("viewer").style.display="block";init();resize();setTimeout(resize,100)}
-function view(v){
- if(!model)return;const c=controls.target.clone();
- if(v==="front")camera.position.set(c.x,c.y,c.z+radius*2.2);
- if(v==="top")camera.position.set(c.x,c.y+radius*2.2,c.z);
- if(v==="side")camera.position.set(c.x+radius*2.2,c.y,c.z);
- controls.update();
-}
-window.addEventListener("resize",resize);
-
-document.addEventListener("DOMContentLoaded",()=>{
- $("start").onclick=showViewer;
- for(const id of ["file","file2"])$(id).addEventListener("change",e=>{openFile(e.target.files[0]);e.target.value=""});
- $("wire").onclick=()=>{wire=!wire;$("wire").classList.toggle("active",wire);if(model)setWire(model)};
- $("grid").onchange=e=>grid.visible=e.target.checked;
- $("light").onchange=e=>{
-   // Меняем только интенсивность источников без удаления/добавления объектов.
-   const on=e.target.checked;
-   lights[0].intensity=on?1.8:0.55;
-   lights[1].intensity=on?2.2:0.35;
-   lights[2].intensity=on?1.0:0.2;
- };
- $("auto").onchange=e=>autoRotate=e.target.checked;
- $("fit").onclick=()=>model&&fit(model);
- $("reset").onclick=()=>model&&fit(model);
- $("full").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
- $("help").onclick=()=>toast("Телефон: 1 палец — вращение; 2 пальца — масштаб/панорама. Нажмите на элемент модели — появится кнопка «Скрыть».");
- $("showHidden").onclick=showAllHidden;
- $("hideSelected").onclick=hideSelected;
- $("clearSelection").onclick=clearSelection;
- $("front").onclick=()=>view("front");$("top").onclick=()=>view("top");$("side").onclick=()=>view("side");$("iso").onclick=()=>model&&fit(model);
- $("stage").addEventListener("dragover",e=>e.preventDefault());
- $("stage").addEventListener("drop",e=>{e.preventDefault();if(e.dataTransfer.files[0])openFile(e.dataTransfer.files[0])});
-
- // WebGLRenderer создаётся в init(); HTML-canvas не подменяет переменную renderer.
-});
-
-let canvasEl;
-function bindPointer(){
- if(!renderer?.domElement)return;
- const canvas=renderer.domElement;
- canvas.addEventListener("pointerdown",e=>{pointerDown={x:e.clientX,y:e.clientY,time:performance.now()}});
- canvas.addEventListener("pointerup",e=>{
-   if(!pointerDown)return;
-   const dx=e.clientX-pointerDown.x,dy=e.clientY-pointerDown.y,dt=performance.now()-pointerDown.time;
-   pointerDown=null;
-   if(Math.hypot(dx,dy)<6&&dt<500)raycastSelect(e);
+function hideSelected(){if(!selected)return;selected.visible=false;hidden.push(selected);clearPick();renderHidden();toast("Элемент скрыт")}
+function renderHidden(){let b=$("hiddenList");if(!hidden.length){b.style.display="none";b.innerHTML="";return}b.innerHTML="";hidden.forEach((m,i)=>{let q=document.createElement("button");q.textContent="👁 "+(m.userData.label||m.name||"Элемент "+(i+1));q.onclick=()=>{m.visible=true;hidden=hidden.filter(x=>x!==m);renderHidden()};b.appendChild(q)});b.style.display="block"}
+function normal(s){return decodeURIComponent(String(s||"")).replace(/\\/g,"/").replace(/^\.?\//,"").toLowerCase()}
+async function makeZip(file){
+ const z=await JSZip.loadAsync(file), files=[], map=new Map();
+ for(const name of Object.keys(z.files)){if(z.files[name].dir)continue;const blob=await z.files[name].async("blob");const u=URL.createObjectURL(blob);urls.push(u);files.push({name,u});map.set(normal(name),u)}
+ const obj=files.find(x=>/\.obj$/i.test(x.name));if(!obj)throw Error("В ZIP нет OBJ");
+ const mtl=files.find(x=>/\.mtl$/i.test(x.name));
+ // URLModifier решает пути к текстурам, включая относительные пути из MTL.
+ const manager=new THREE.LoadingManager();
+ manager.setURLModifier(req=>{
+   const n=normal(req),base=n.split("/").pop();
+   return map.get(n)||map.get(base)||req;
  });
+ return {obj,mtl,manager};
 }
-function animate(){
- requestAnimationFrame(animate);
- if(!renderer)return;
- if(autoRotate&&model)model.rotation.y+=.004;
- controls.update();
- if(selectionOutline&&selected&&selected.visible){
-   selectionOutline.box.setFromObject(selected);
- }else if(selectionOutline&&!selected){scene.remove(selectionOutline)}
- renderer.render(scene,camera);
+async function load(file){
+ init();$("progress").style.display="block";$("bar").style.width="15%";cleanup();clearPick();hidden=[];
+ try{
+  let objUrl,type,manager=new THREE.LoadingManager(),mtlUrl=null,name=file.name;
+  if(/\.zip$/i.test(file.name)){let z=await makeZip(file);objUrl=z.obj.u;mtlUrl=z.mtl?.u;manager=z.manager;name=z.obj.name}
+  else {objUrl=URL.createObjectURL(file);urls.push(objUrl);type=file.name.split(".").pop().toLowerCase()}
+  $("bar").style.width="40%";
+  let root;
+  if(mtlUrl){
+    const ml=new MTLLoader(manager);const mat=await new Promise((res,rej)=>ml.load(mtlUrl,res,undefined,rej));
+    mat.preload();
+    root=await new Promise((res,rej)=>new OBJLoader(manager).setMaterials(mat).load(objUrl,res,undefined,rej));
+  }else if(/\.obj$/i.test(name))root=await new Promise((res,rej)=>new OBJLoader(manager).load(objUrl,res,undefined,rej));
+  else if(/\.dae$/i.test(name))root=(await new Promise((res,rej)=>new ColladaLoader(manager).load(objUrl,x=>res(x),undefined,rej))).scene;
+  else if(/\.(glb|gltf)$/i.test(name))root=(await new Promise((res,rej)=>new GLTFLoader(manager).load(objUrl,x=>res(x),undefined,rej))).scene;
+  else throw Error("Для этой версии используйте OBJ/DAE/GLB или ZIP с OBJ + MTL");
+  $("bar").style.width="80%";
+  // Если OBJ состоит из одного общего Mesh, разбиваем его по группам материала/геометрии.
+  // Это позволяет выбирать и скрывать конкретный элемент материала/группы, а не всю модель.
+  let idx=1;
+  root.traverse(m=>{
+    if(m.isMesh){
+      m.userData.label=m.name||m.parent?.name||("Элемент "+idx++);
+      m.material?.forEach?.(()=>{});
+      if(Array.isArray(m.material)){
+        // Multi-material mesh нельзя скрывать по material без разделения; создаём отдельные Mesh по группам.
+        const mats=m.material, groups=m.geometry.groups;
+        if(groups?.length){
+          const parent=m.parent;
+          const parts=[];
+          for(let gi=0;gi<groups.length;gi++){
+            const g=groups[gi],geo=m.geometry.clone();geo.clearGroups();geo.addGroup(g.start,g.count,g.materialIndex);
+            const pm=new THREE.Mesh(geo,mats[g.materialIndex]||mats[0]);pm.position.copy(m.position);pm.quaternion.copy(m.quaternion);pm.scale.copy(m.scale);
+            pm.userData.label=m.userData.label+" · "+(pm.material?.name||("часть "+(gi+1)));parts.push(pm);
+          }
+          if(parts.length>1){parts.forEach(p=>parent.add(p));m.visible=false}
+        }
+      }
+    }
+  });
+  model=root;scene.add(model);edgeWire(model);fit(model);$("empty").style.display="none";$("bar").style.width="100%";toast("Загружено: "+name);
+ }catch(e){console.error(e);toast("Ошибка загрузки: "+e.message)}
+ finally{setTimeout(()=>$("progress").style.display="none",400)}
 }
-// Ensure pointer binding once renderer exists.
-const oldInit=init;
-init=function(){const ok=oldInit();if(ok&&!canvasEl){canvasEl=renderer.domElement;bindPointer()}return ok};
+function animate(){requestAnimationFrame(animate);if(!renderer)return;controls.update();renderer.render(scene,camera);}
+
+$("start").onclick=()=>{$("home").style.display="none";$("viewer").style.display="block";init();resize()};
+$("file").onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value=""};
+$("file2").onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value=""};
+$("wire").onclick=()=>{wire=!wire;$("wire").classList.toggle("active",wire);if(model)edgeWire(model)};
+$("fit").onclick=()=>model&&fit(model);$("reset").onclick=()=>model&&fit(model);
+$("full").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
+$("hideSelected").onclick=hideSelected;$("clearSelection").onclick=clearPick;
+$("showHidden").onclick=()=>{hidden.forEach(x=>x.visible=true);hidden=[];renderHidden();toast("Все скрытые элементы показаны")};
 </script>
-</body>
-</html>
+</body></html>
