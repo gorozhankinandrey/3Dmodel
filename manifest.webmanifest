@@ -1,8 +1,9 @@
 {
-  "name": "ModelView 3D",
+  "name": "ModelView — Бесплатный 3D Viewer",
   "short_name": "ModelView",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f4f5f7",
-  "theme_color": "#f4f5f7"
+  "background_color": "#070a12",
+  "theme_color": "#080b14",
+  "description": "Просмотр 3DS и DAE прямо в браузере"
 }
