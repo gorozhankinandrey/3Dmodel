@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f6f8">
+  <title>OBJ 3D Viewer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <b>OBJ 3D Viewer</b>
+      <span id="status">Выберите OBJ или ZIP</span>
+    </div>
+    <label class="file-btn">Открыть файл
+      <input id="fileInput" type="file" accept=".obj,.zip,.mtl,.jpg,.jpeg,.png,.bmp" multiple>
+    </label>
+  </header>
+
+  <main>
+    <section id="drop" class="drop">
+      <div class="drop-title">Перетащите сюда OBJ или ZIP</div>
+      <div class="drop-sub">Для текстур лучше загружать ZIP: внутри должны быть OBJ, MTL и папка с текстурами.</div>
+      <button id="openBtn">Выбрать файл</button>
+    </section>
+
+    <div id="viewer" class="viewer hidden">
+      <canvas id="canvas"></canvas>
+
+      <div class="controls">
+        <button id="fitBtn">Вписать</button>
+        <button id="textureBtn" class="active">Текстуры</button>
+        <button id="wireBtn">Каркас</button>
+        <button id="resetBtn">Сброс</button>
+      </div>
+
+      <div class="help">
+        <span>ПК: ЛКМ — вращение · колесо — масштаб · ПКМ — панорама</span>
+        <span>Телефон: 1 палец — вращение · 2 пальца — масштаб/панорама</span>
+      </div>
+    </div>
+
+    <aside id="partsPanel" class="parts hidden">
+      <div class="parts-head">
+        <b>Детали</b>
+        <button id="showAllBtn">Показать все</button>
+      </div>
+      <div id="partsList"></div>
+      <div class="hint">Нажмите на деталь в модели — она выделится. Кнопка «Скрыть» убирает только выбранную деталь.</div>
+    </aside>
+  </main>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
