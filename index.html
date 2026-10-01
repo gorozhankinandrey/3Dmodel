@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>3D Model Viewer — OBJ / MTL / Textures</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b1020;color:#fff;overflow:hidden}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr}
+header{padding:10px 14px;background:#111827;border-bottom:1px solid #263044;display:flex;gap:10px;align-items:center;flex-wrap:wrap;z-index:5}
+h1{font-size:16px;margin:0 12px 0 0;white-space:nowrap}
+button,.file-label{border:1px solid #3b465d;background:#1a2335;color:#fff;border-radius:9px;padding:9px 12px;font-size:14px;cursor:pointer}
+button:hover,.file-label:hover{background:#24304a}
+button.primary,.file-label.primary{background:#2563eb;border-color:#2563eb}
+input[type=file]{display:none}
+main{position:relative;min-height:0}
+#viewer{position:absolute;inset:0}
+.panel{position:absolute;left:12px;top:12px;width:min(330px,calc(100vw - 24px));background:rgba(17,24,39,.92);backdrop-filter:blur(12px);border:1px solid #344057;border-radius:12px;padding:12px;z-index:4;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.row{display:flex;align-items:center;gap:8px;margin:7px 0}
+.row label{font-size:13px;color:#cbd5e1;flex:1}
+.row input[type=range]{width:150px}
+.value{width:42px;text-align:right;font-variant-numeric:tabular-nums;color:#fff}
+.status{font-size:12px;color:#9ca3af;margin-top:8px;line-height:1.4}
+.badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#24304a;color:#cbd5e1;font-size:11px}
+.help{font-size:12px;color:#94a3b8;line-height:1.4;margin-top:10px}
+#drop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:3}
+.dropbox{padding:22px 26px;border:2px dashed #64748b;border-radius:14px;background:rgba(15,23,42,.8);text-align:center;display:none}
+.drag #drop .dropbox{display:block}
+#loading{position:absolute;right:14px;top:14px;background:rgba(17,24,39,.92);padding:9px 12px;border-radius:9px;display:none;z-index:6}
+@media(max-width:700px){
+ header{padding:8px;gap:6px}
+ h1{width:100%;font-size:15px}
+ button,.file-label{padding:8px 10px;font-size:13px}
+ .panel{top:auto;bottom:10px;left:10px;width:calc(100vw - 20px);max-height:46vh;overflow:auto}
+ .row input[type=range]{flex:1}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<h1>3D Model Viewer</h1>
+<label class="file-label primary">Загрузить OBJ / ZIP
+<input id="files" type="file" multiple accept=".obj,.mtl,.jpg,.jpeg,.png,.webp,.gif,.bmp,.zip">
+</label>
+<button id="front">Спереди</button>
+<button id="top">Сверху</button>
+<button id="side">Сбоку</button>
+<button id="reset">Сброс</button>
+</header>
+<main>
+<div id="viewer"></div>
+<div id="drop"><div class="dropbox">Отпустите OBJ или ZIP с моделью здесь</div></div>
+<div id="loading">Загрузка…</div>
+<div class="panel">
+  <div class="row"><span class="badge" id="mode">Текстуры</span><span class="badge" id="modelName">Модель не загружена</span></div>
+  <div class="row">
+    <label><input id="wire" type="checkbox"> Каркас</label>
+  </div>
+  <div class="row">
+    <label for="opacity">Прозрачность</label>
+    <input id="opacity" type="range" min="5" max="100" value="100">
+    <span class="value" id="opacityValue">100%</span>
+  </div>
+  <div class="row">
+    <label><input id="grid" type="checkbox"> Сетка</label>
+    <input id="spin" type="checkbox"> Автовращение
+  </div>
+  <div class="help">
+    ZIP: положите внутрь <b>.obj</b>, <b>.mtl</b> и папку/файлы текстур. На телефоне можно выбрать ZIP из «Файлы».
+    Управление: мышь/палец — вращение, колесо/щипок — масштаб, средняя кнопка/двумя пальцами — панорама.
+  </div>
+  <div class="status" id="status">Готово. Загрузите OBJ или ZIP.</div>
+</div>
+</main>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
+import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
+
+const viewer=document.getElementById('viewer'), fileInput=document.getElementById('files');
+const statusEl=document.getElementById('status'), nameEl=document.getElementById('modelName');
+const loadingEl=document.getElementById('loading'), opacityEl=document.getElementById('opacity'), opacityValue=document.getElementById('opacityValue');
+const wireEl=document.getElementById('wire'), gridEl=document.getElementById('grid'), spinEl=document.getElementById('spin'), modeEl=document.getElementById('mode');
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x101827);
+const camera=new THREE.PerspectiveCamera(45,1,.01,100000);
+camera.position.set(4,3,6);
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1;
+viewer.appendChild(renderer.domElement);
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=.06;
+controls.minDistance=.01;
+controls.maxDistance=100000;
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x334155,2.0));
+const key=new THREE.DirectionalLight(0xffffff,2.2); key.position.set(5,10,7); scene.add(key);
+const fill=new THREE.DirectionalLight(0xbcd7ff,1.1); fill.position.set(-6,4,-4); scene.add(fill);
+
+let grid=new THREE.GridHelper(20,20,0x64748b,0x334155);
+grid.visible=false; scene.add(grid);
+let model=null, currentFiles=[], blobUrls=[], urlMap=new Map(), lastMaterials=[];
+
+function resize(){
+ const w=viewer.clientWidth,h=viewer.clientHeight;
+ camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h,false);
+}
+new ResizeObserver(resize).observe(viewer); resize();
+
+function setStatus(s){statusEl.textContent=s}
+function cleanupUrls(){blobUrls.forEach(u=>URL.revokeObjectURL(u));blobUrls=[];urlMap.clear()}
+
+function registerUrl(name,blob){
+ const clean=name.replace(/\\/g,'/').replace(/^\.?\//,'');
+ const url=URL.createObjectURL(blob);
+ blobUrls.push(url);
+ const keys=new Set([clean, clean.toLowerCase(), clean.split('/').pop(), clean.split('/').pop().toLowerCase()]);
+ for(const k of keys) urlMap.set(k,url);
+ return url;
+}
+function resolveMapped(url){
+ let u=url.replace(/\\/g,'/').replace(/^\.?\//,'');
+ if(urlMap.has(u)) return urlMap.get(u);
+ if(urlMap.has(u.toLowerCase())) return urlMap.get(u.toLowerCase());
+ const base=u.split('/').pop();
+ return urlMap.get(base)||urlMap.get(base.toLowerCase())||url;
+}
+const manager=new THREE.LoadingManager();
+manager.setURLModifier(url=>resolveMapped(url));
+
+function normalizeName(n){return n.split('/').pop().toLowerCase()}
+function getBlobByExt(files,ext){
+ return files.find(f=>normalizeName(f.name).endsWith(ext));
+}
+
+async function extractZip(file){
+ const zip=await JSZip.loadAsync(file);
+ const out=[];
+ for(const [name,entry] of Object.entries(zip.files)){
+   if(entry.dir) continue;
+   const lower=name.toLowerCase();
+   if(/\.(obj|mtl|jpe?g|png|webp|gif|bmp|tga)$/i.test(lower)){
+      const blob=await entry.async('blob');
+      out.push(new File([blob],name,{type:blob.type||guessMime(name)}));
+   }
+ }
+ return out;
+}
+function guessMime(name){
+ const e=name.toLowerCase().split('.').pop();
+ return ({jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',bmp:'image/bmp',mtl:'text/plain',obj:'text/plain',tga:'image/x-tga'})[e]||'application/octet-stream';
+}
+
+async function loadFiles(files,label=''){
+ loadingEl.style.display='block';
+ try{
+   cleanupUrls();
+   currentFiles=files;
+   const objFile=files.find(f=>/\.obj$/i.test(f.name));
+   if(!objFile) throw new Error('В выбранных файлах не найден OBJ.');
+   const mtlFile=files.find(f=>/\.mtl$/i.test(f.name));
+   for(const f of files) registerUrl(f.name,f);
+   // Also map basename to help OBJ/MTL references with folders.
+   const objUrl=resolveMapped(objFile.name);
+   nameEl.textContent=objFile.name.split('/').pop();
+   if(model){scene.remove(model); disposeModel(model); model=null}
+   lastMaterials=[];
+   let object;
+   if(mtlFile){
+     const text=await mtlFile.text();
+     const mtl=new MTLLoader(manager).parse(text, '');
+     mtl.preload();
+     object=await new Promise((resolve,reject)=>{
+       const loader=new OBJLoader(manager);
+       loader.setMaterials(mtl);
+       loader.load(objUrl,resolve,undefined,reject);
+     });
+     modeEl.textContent='Текстуры';
+   }else{
+     object=await new Promise((resolve,reject)=>{
+       const loader=new OBJLoader(manager);
+       loader.load(objUrl,resolve,undefined,reject);
+     });
+     modeEl.textContent='Без MTL';
+   }
+   model=object;
+   model.traverse(o=>{
+     if(o.isMesh){
+       if(o.material){
+         const arr=Array.isArray(o.material)?o.material:[o.material];
+         arr.forEach(m=>{
+           lastMaterials.push(m);
+           m.side=THREE.DoubleSide;
+           m.transparent=true;
+           m.opacity=1;
+           m.needsUpdate=true;
+         });
+       }
+       o.castShadow=true;o.receiveShadow=true;
+     }
+   });
+   scene.add(model);
+   frameModel();
+   applyAppearance();
+   setStatus(`Загружено: ${objFile.name.split('/').pop()}${mtlFile?' + MTL и текстуры':''}`);
+ }catch(e){
+   console.error(e);
+   setStatus('Ошибка: '+(e?.message||e));
+   alert('Не удалось открыть модель. Проверьте, что ZIP содержит OBJ и MTL/текстуры, если они нужны.');
+ }finally{loadingEl.style.display='none'}
+}
+
+function disposeModel(root){
+ root.traverse(o=>{
+   if(o.geometry) o.geometry.dispose();
+   if(o.material){
+     const ms=Array.isArray(o.material)?o.material:[o.material];
+     ms.forEach(m=>{if(m.map)m.map.dispose();m.dispose()});
+   }
+ });
+}
+function frameModel(){
+ if(!model)return;
+ const box=new THREE.Box3().setFromObject(model), size=box.getSize(new THREE.Vector3()), center=box.getCenter(new THREE.Vector3());
+ const max=Math.max(size.x,size.y,size.z)||1;
+ const dist=max/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)))*1.5;
+ camera.position.copy(center).add(new THREE.Vector3(1,0.8,1).normalize().multiplyScalar(dist));
+ camera.near=Math.max(max/10000,.001); camera.far=max*100; camera.updateProjectionMatrix();
+ controls.target.copy(center); controls.update();
+ grid.position.y=box.min.y;
+ grid.scale.setScalar(Math.max(1,max/20));
+}
+function applyAppearance(){
+ const opacity=Number(opacityEl.value)/100;
+ const wire=wireEl.checked;
+ lastMaterials.forEach(m=>{
+   m.transparent=true;
+   m.opacity=opacity;
+   m.wireframe=wire;
+   m.depthWrite=opacity>.99;
+   m.needsUpdate=true;
+ });
+ modeEl.textContent=wire?'Каркас':'Текстуры';
+}
+function view(dir){
+ if(!model)return;
+ const box=new THREE.Box3().setFromObject(model), center=box.getCenter(new THREE.Vector3()), size=box.getSize(new THREE.Vector3()), max=Math.max(size.x,size.y,size.z)||1;
+ const d=max*1.8;
+ camera.position.copy(center).add(dir.clone().multiplyScalar(d));
+ controls.target.copy(center); controls.update();
+}
+
+fileInput.addEventListener('change',async e=>{
+ const fs=[...e.target.files];
+ if(!fs.length)return;
+ const z=fs.find(f=>/\.zip$/i.test(f.name));
+ if(z){setStatus('Распаковываю ZIP…'); await loadFiles(await extractZip(z),z.name)}
+ else await loadFiles(fs);
+ fileInput.value='';
+});
+['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();document.body.classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();document.body.classList.remove('drag')}));
+document.addEventListener('drop',async e=>{
+ const fs=[...e.dataTransfer.files]; if(!fs.length)return;
+ const z=fs.find(f=>/\.zip$/i.test(f.name));
+ await loadFiles(z?await extractZip(z):fs);
+});
+wireEl.addEventListener('change',applyAppearance);
+opacityEl.addEventListener('input',()=>{opacityValue.textContent=opacityEl.value+'%';applyAppearance()});
+gridEl.addEventListener('change',()=>grid.visible=gridEl.checked);
+spinEl.addEventListener('change',()=>controls.autoRotate=spinEl.checked);
+document.getElementById('reset').onclick=()=>{if(model)frameModel()};
+document.getElementById('front').onclick=()=>view(new THREE.Vector3(0,0,1));
+document.getElementById('top').onclick=()=>view(new THREE.Vector3(0,1,0));
+document.getElementById('side').onclick=()=>view(new THREE.Vector3(1,0,0));
+
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
+animate();
+</script>
+</body>
+</html>
