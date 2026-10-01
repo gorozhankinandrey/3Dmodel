@@ -2,301 +2,155 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
-<title>3D Model Viewer — OBJ / MTL / Textures</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f5f7fb">
+<title>ModelView — OBJ / 3D Viewer</title>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b1020;color:#fff;overflow:hidden}
-.app{height:100%;display:grid;grid-template-rows:auto 1fr}
-header{padding:10px 14px;background:#111827;border-bottom:1px solid #263044;display:flex;gap:10px;align-items:center;flex-wrap:wrap;z-index:5}
-h1{font-size:16px;margin:0 12px 0 0;white-space:nowrap}
-button,.file-label{border:1px solid #3b465d;background:#1a2335;color:#fff;border-radius:9px;padding:9px 12px;font-size:14px;cursor:pointer}
-button:hover,.file-label:hover{background:#24304a}
-button.primary,.file-label.primary{background:#2563eb;border-color:#2563eb}
-input[type=file]{display:none}
-main{position:relative;min-height:0}
-#viewer{position:absolute;inset:0}
-.panel{position:absolute;left:12px;top:12px;width:min(330px,calc(100vw - 24px));background:rgba(17,24,39,.92);backdrop-filter:blur(12px);border:1px solid #344057;border-radius:12px;padding:12px;z-index:4;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.row{display:flex;align-items:center;gap:8px;margin:7px 0}
-.row label{font-size:13px;color:#cbd5e1;flex:1}
-.row input[type=range]{width:150px}
-.value{width:42px;text-align:right;font-variant-numeric:tabular-nums;color:#fff}
-.status{font-size:12px;color:#9ca3af;margin-top:8px;line-height:1.4}
-.badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#24304a;color:#cbd5e1;font-size:11px}
-.help{font-size:12px;color:#94a3b8;line-height:1.4;margin-top:10px}
-#drop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:3}
-.dropbox{padding:22px 26px;border:2px dashed #64748b;border-radius:14px;background:rgba(15,23,42,.8);text-align:center;display:none}
-.drag #drop .dropbox{display:block}
-#loading{position:absolute;right:14px;top:14px;background:rgba(17,24,39,.92);padding:9px 12px;border-radius:9px;display:none;z-index:6}
-@media(max-width:700px){
- header{padding:8px;gap:6px}
- h1{width:100%;font-size:15px}
- button,.file-label{padding:8px 10px;font-size:13px}
- .panel{top:auto;bottom:10px;left:10px;width:calc(100vw - 20px);max-height:46vh;overflow:auto}
- .row input[type=range]{flex:1}
-}
+:root{--bg:#f4f6f9;--stage:#eef1f5;--panel:#fffefcf2;--line:#d9dee7;--text:#172033;--muted:#667085;--accent:#4f46e5;--soft:#eef0ff;--danger:#dc2626}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input{font:inherit}
+.home{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#f8fafc,#e9edf5);z-index:50}.home-card{width:min(1050px,100%);display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.hero,.features{background:#ffffffed;border:1px solid var(--line);border-radius:24px;box-shadow:0 20px 70px #25304a18}.hero{padding:48px}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.18em;color:var(--accent);font-weight:800}.hero h1{font-size:clamp(38px,7vw,70px);line-height:.96;margin:14px 0}.hero p{color:var(--muted);line-height:1.65}.start{margin-top:16px;border:0;border-radius:12px;padding:14px 20px;background:var(--accent);color:#fff;font-weight:750}.formats{margin-top:16px;color:#7a8495;font-size:12px}.features{padding:28px}.features h2{margin:0 0 12px}.feature{padding:13px 0;border-bottom:1px solid #edf0f4;color:#465166}.feature:last-child{border:0}
+.viewer{display:none;position:fixed;inset:0}.topbar{height:58px;display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fffdfcf2;border-bottom:1px solid var(--line);position:absolute;inset:0 0 auto;z-index:20;backdrop-filter:blur(15px)}.brand{display:flex;gap:8px;align-items:center;min-width:170px}.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center}.brand small{display:block;color:var(--muted);font-size:10px}.actions{margin-left:auto;display:flex;gap:7px}.btn,.round,.tool{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:10px;cursor:pointer}.btn{height:38px;padding:0 12px}.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.stage{position:absolute;inset:58px 0 0;background:var(--stage)}canvas{width:100%;height:100%;display:block;touch-action:none}.panel{position:absolute;top:12px;left:12px;width:300px;max-height:calc(100% - 24px);overflow:auto;z-index:10;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:0 15px 45px #26334a22;backdrop-filter:blur(14px)}.drop{border:1px dashed #b8c1cf;border-radius:11px;padding:12px;text-align:center;color:var(--muted)}.filebtn{display:block;margin-top:9px;padding:10px;border-radius:9px;background:#eef1f6;color:var(--text);cursor:pointer}.tools{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}.tool{height:36px}.tool.active{background:var(--soft);border-color:#8b83ef;color:#3f36ad}.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;font-size:13px;border-bottom:1px solid #edf0f4}.row:last-child{border:0}.switch{appearance:none;width:38px;height:21px;border:0;border-radius:20px;background:#cbd2dd;position:relative}.switch:before{content:"";position:absolute;width:17px;height:17px;top:2px;left:2px;border-radius:50%;background:white;transition:.2s;box-shadow:0 1px 3px #0003}.switch:checked{background:var(--accent)}.switch:checked:before{left:19px}.range{width:110px}.section-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7b8492;font-weight:800;margin:13px 0 6px}.list{display:flex;flex-direction:column;gap:5px}.item{display:flex;align-items:center;gap:7px;padding:7px 8px;border:1px solid #e3e7ed;border-radius:9px;background:#fff}.item.sel{border-color:#8177eb;background:#f3f2ff}.item span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.item button{border:0;background:transparent;color:#687386;cursor:pointer;padding:2px 5px}.material-row{display:flex;align-items:center;gap:7px}.material-dot{width:14px;height:14px;border-radius:4px;border:1px solid #cbd2dc}.side{position:absolute;right:12px;top:12px;z-index:10;display:flex;flex-direction:column;gap:7px}.round{width:40px;height:40px}.bottom{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:4px;padding:5px;background:#ffffffed;border:1px solid var(--line);border-radius:13px;box-shadow:0 8px 25px #26334a18}.bottom button{width:42px;height:34px;border:0;border-radius:8px;background:transparent;color:var(--text)}.bottom button:active{background:#eef0f4}.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);pointer-events:none}.empty h2{color:var(--text)}.toast{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:40;background:#172033;color:#fff;border-radius:10px;padding:9px 13px;display:none;max-width:90%;text-align:center}.progress{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,82%);background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;z-index:30;display:none;box-shadow:0 20px 60px #0002}.bar{height:7px;background:#e6e9ee;border-radius:8px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;width:0;background:var(--accent)}.info{font-size:11px;color:var(--muted);margin-top:8px}
+@media(max-width:760px){.home-card{grid-template-columns:1fr}.features{display:none}.hero{padding:30px}.panel{left:8px;top:auto;bottom:62px;width:calc(100% - 16px);max-height:52vh}.panel .mobile-hide{display:none}.brand{min-width:auto}.brand small{display:none}.actions .help{display:none}.bottom{bottom:9px}.side{top:9px;right:8px}.topbar{padding-left:8px}.btn{padding:0 9px}}
 </style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
-<div class="app">
-<header>
-<h1>3D Model Viewer</h1>
-<label class="file-label primary">Загрузить OBJ / ZIP
-<input id="files" type="file" multiple accept=".obj,.mtl,.jpg,.jpeg,.png,.webp,.gif,.bmp,.zip">
-</label>
-<button id="front">Спереди</button>
-<button id="top">Сверху</button>
-<button id="side">Сбоку</button>
-<button id="reset">Сброс</button>
-</header>
-<main>
-<div id="viewer"></div>
-<div id="drop"><div class="dropbox">Отпустите OBJ или ZIP с моделью здесь</div></div>
-<div id="loading">Загрузка…</div>
-<div class="panel">
-  <div class="row"><span class="badge" id="mode">Текстуры</span><span class="badge" id="modelName">Модель не загружена</span></div>
-  <div class="row">
-    <label><input id="wire" type="checkbox"> Каркас</label>
-  </div>
-  <div class="row">
-    <label for="opacity">Прозрачность</label>
-    <input id="opacity" type="range" min="5" max="100" value="100">
-    <span class="value" id="opacityValue">100%</span>
-  </div>
-  <div class="row">
-    <label><input id="grid" type="checkbox"> Сетка</label>
-    <input id="spin" type="checkbox"> Автовращение
-  </div>
-  <div class="help">
-    ZIP: положите внутрь <b>.obj</b>, <b>.mtl</b> и папку/файлы текстур. На телефоне можно выбрать ZIP из «Файлы».
-    Управление: мышь/палец — вращение, колесо/щипок — масштаб, средняя кнопка/двумя пальцами — панорама.
-  </div>
-  <div class="status" id="status">Готово. Загрузите OBJ или ZIP.</div>
-</div>
-</main>
-</div>
+<section class="home" id="home"><div class="home-card"><div class="hero"><div class="eyebrow">GitHub Pages · iPhone · Android · Windows</div><h1>3D-модель прямо в браузере.</h1><p>OBJ с MTL и текстурами, выделение деталей, скрытие частей, материалы, каркас и удобное управление пальцами.</p><button class="start" id="start">Открыть 3D-модель →</button><div class="formats">OBJ + MTL + JPG / PNG / WEBP · ZIP</div></div><div class="features"><h2>Управление</h2><div class="feature">☝️ 1 палец — вращение</div><div class="feature">🤏 2 пальца — масштаб и панорама</div><div class="feature">🎯 Нажатие по детали — выделение</div><div class="feature">👁 Скрыть / показать деталь</div><div class="feature">🎨 Скрыть / показать материал</div><div class="feature">⌗ Каркас только по видимым граням</div></div></div></section>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-  }
-}
-</script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<section class="viewer" id="viewer"><header class="topbar"><div class="brand"><div class="logo">◇</div><div><b>ModelView</b><small>3D Viewer</small></div></div><div class="actions"><label class="btn primary">＋ Открыть<input id="file" type="file" multiple accept=".obj,.mtl,.jpg,.jpeg,.png,.webp,.bmp,.gif,.zip" hidden></label><button class="btn help" id="help">?</button></div></header>
+<main class="stage" id="stage"><div class="empty" id="empty"><div><div style="font-size:50px">◇</div><h2>Откройте OBJ или ZIP</h2><p>OBJ + MTL + папка textures</p></div></div><canvas id="canvas"></canvas>
+<div class="panel"><div class="drop">📦 <b>Загрузить модель</b><div>OBJ + MTL + текстуры или ZIP</div><label class="filebtn">Выбрать файлы<input id="file2" type="file" multiple accept=".obj,.mtl,.jpg,.jpeg,.png,.webp,.bmp,.gif,.zip" hidden></label></div>
+<div class="tools"><button class="tool active" id="wire">⌗ Каркас</button><button class="tool" id="fit">◉ Вписать</button></div>
+<div class="row">Фон <button class="tool" id="bg">☼ Светлый</button></div>
+<div class="row">Каркас <input class="switch" id="wireToggle" type="checkbox"></div>
+<div class="row">Прозрачность <input class="range" id="opacity" type="range" min="5" max="100" value="100"></div>
+<div class="row">Сетка <input class="switch" id="grid" type="checkbox" checked></div>
+<div class="row">Автовращение <input class="switch" id="auto" type="checkbox"></div>
+<div class="row">Освещение <input class="switch" id="light" type="checkbox" checked></div>
+<div class="section-title">Выделенная деталь</div><div id="selectedInfo" style="font-size:12px;color:var(--muted)">Нажмите на деталь модели</div>
+<div class="tools"><button class="tool" id="hideSelected">👁 Скрыть</button><button class="tool" id="showAll">↻ Показать всё</button></div>
+<div class="section-title">Детали модели</div><div class="list" id="parts"></div>
+<div class="section-title">Материалы</div><div class="list" id="materials"></div>
+</div>
+<div class="side"><button class="round" id="reset">↺</button><button class="round" id="full">⛶</button></div>
+<div class="bottom"><button id="front">●</button><button id="top">▲</button><button id="side">■</button><button id="iso">◇</button></div>
+<div class="toast" id="toast"></div><div class="progress" id="progress">Открываем модель…<div class="bar"><i id="bar"></i></div><div class="info">Обработка выполняется на устройстве</div></div>
+</main></section>
+
 <script type="module">
-import * as THREE from 'three';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
-import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
+import * as THREE from "three";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+import {OBJLoader} from "three/addons/loaders/OBJLoader.js";
+import {MTLLoader} from "three/addons/loaders/MTLLoader.js";
+import JSZip from "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm";
 
-const viewer=document.getElementById('viewer'), fileInput=document.getElementById('files');
-const statusEl=document.getElementById('status'), nameEl=document.getElementById('modelName');
-const loadingEl=document.getElementById('loading'), opacityEl=document.getElementById('opacity'), opacityValue=document.getElementById('opacityValue');
-const wireEl=document.getElementById('wire'), gridEl=document.getElementById('grid'), spinEl=document.getElementById('spin'), modeEl=document.getElementById('mode');
+const $=id=>document.getElementById(id);
+let scene,camera,renderer,controls,grid,model=null,selected=null,selectionLine=null;
+let wireMode=false,autoRotate=false,lightOn=true,bright=true,modelOpacity=1,blobUrls=[];
+let parts=[], materials=[], raycaster=new THREE.Raycaster(), pointer=new THREE.Vector2();
 
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x101827);
-const camera=new THREE.PerspectiveCamera(45,1,.01,100000);
-camera.position.set(4,3,6);
-const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:false});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1;
-viewer.appendChild(renderer.domElement);
-
-const controls=new OrbitControls(camera,renderer.domElement);
-controls.enableDamping=true;
-controls.dampingFactor=.06;
-controls.minDistance=.01;
-controls.maxDistance=100000;
-
-scene.add(new THREE.HemisphereLight(0xffffff,0x334155,2.0));
-const key=new THREE.DirectionalLight(0xffffff,2.2); key.position.set(5,10,7); scene.add(key);
-const fill=new THREE.DirectionalLight(0xbcd7ff,1.1); fill.position.set(-6,4,-4); scene.add(fill);
-
-let grid=new THREE.GridHelper(20,20,0x64748b,0x334155);
-grid.visible=false; scene.add(grid);
-let model=null, currentFiles=[], blobUrls=[], urlMap=new Map(), lastMaterials=[];
-
-function resize(){
- const w=viewer.clientWidth,h=viewer.clientHeight;
- camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h,false);
+function toast(s){const e=$("toast");e.textContent=s;e.style.display="block";clearTimeout(window.tt);window.tt=setTimeout(()=>e.style.display="none",3500);}
+function ext(n){let p=(n||"").split("?")[0].split("#")[0].split(".");return p.length>1?p.pop().toLowerCase():"";}
+function norm(n){return decodeURIComponent((n||"").replace(/\\/g,"/")).replace(/^\.\/+/,"");}
+function base(n){return norm(n).split("/").pop().toLowerCase();}
+function clean(){blobUrls.forEach(u=>URL.revokeObjectURL(u));blobUrls=[];}
+function init(){
+ if(renderer)return;
+ scene=new THREE.Scene(); scene.background=new THREE.Color(0xf0f2f5);
+ camera=new THREE.PerspectiveCamera(45,1,.01,100000);camera.position.set(4,3,5);
+ renderer=new THREE.WebGLRenderer({canvas:$("canvas"),antialias:true,alpha:false});
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,2)); if("outputColorSpace"in renderer)renderer.outputColorSpace=THREE.SRGBColorSpace;
+ controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.screenSpacePanning=true;controls.rotateSpeed=.7;controls.zoomSpeed=.9;controls.panSpeed=.8;
+ scene.add(new THREE.HemisphereLight(0xffffff,0x667085,2.2));let key=new THREE.DirectionalLight(0xffffff,2.6);key.position.set(5,8,5);scene.add(key);let fill=new THREE.DirectionalLight(0xffffff,1.1);fill.position.set(-5,3,-4);scene.add(fill);
+ grid=new THREE.GridHelper(20,20,0xb8c0cc,0xd7dce4);scene.add(grid);
+ resize();animate();
 }
-new ResizeObserver(resize).observe(viewer); resize();
-
-function setStatus(s){statusEl.textContent=s}
-function cleanupUrls(){blobUrls.forEach(u=>URL.revokeObjectURL(u));blobUrls=[];urlMap.clear()}
-
-function registerUrl(name,blob){
- const clean=name.replace(/\\/g,'/').replace(/^\.?\//,'');
- const url=URL.createObjectURL(blob);
- blobUrls.push(url);
- const keys=new Set([clean, clean.toLowerCase(), clean.split('/').pop(), clean.split('/').pop().toLowerCase()]);
- for(const k of keys) urlMap.set(k,url);
- return url;
+function resize(){if(!renderer)return;let r=$("stage").getBoundingClientRect();camera.aspect=r.width/r.height;camera.updateProjectionMatrix();renderer.setSize(r.width,r.height,false);}
+function dispose(o){o?.traverse(x=>{x.geometry?.dispose();let ms=Array.isArray(x.material)?x.material:(x.material?[x.material]:[]);ms.forEach(m=>{for(let k of ["map","normalMap","roughnessMap","metalnessMap","emissiveMap","aoMap","alphaMap","bumpMap","displacementMap"])m[k]?.dispose();m.dispose?.()})})}
+function fit(o){let b=new THREE.Box3().setFromObject(o);if(b.isEmpty())return;let s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3());let r=Math.max(s.x,s.y,s.z)||1,d=r/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));camera.position.copy(c).add(new THREE.Vector3(1,.7,1).normalize().multiplyScalar(d*1.5));controls.target.copy(c);controls.minDistance=r*.01;controls.maxDistance=r*100;controls.update();grid.position.y=b.min.y;grid.scale.setScalar(Math.max(1,r/20));}
+function applyMaterialState(){
+ if(!model)return;
+ model.traverse(o=>{if(!o.isMesh)return;let ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.transparent=modelOpacity<.999;m.opacity=modelOpacity;m.depthWrite=modelOpacity>.35;});});
+ updateWire();
 }
-function resolveMapped(url){
- let u=url.replace(/\\/g,'/').replace(/^\.?\//,'');
- if(urlMap.has(u)) return urlMap.get(u);
- if(urlMap.has(u.toLowerCase())) return urlMap.get(u.toLowerCase());
- const base=u.split('/').pop();
- return urlMap.get(base)||urlMap.get(base.toLowerCase())||url;
+function updateWire(){
+ if(!model)return;
+ model.traverse(o=>{if(o.userData._edge){o.userData._edge.visible=false;}});
+ if(!wireMode)return;
+ model.traverse(o=>{
+  if(!o.isMesh)return;
+  if(!o.userData._edge){let eg=new THREE.EdgesGeometry(o.geometry,1);let ln=new THREE.LineSegments(eg,new THREE.LineBasicMaterial({color:0x334155,transparent:true,opacity:.95,depthTest:true,depthWrite:false}));ln.renderOrder=5;ln.userData.edgeOf=o;o.add(ln);o.userData._edge=ln;}
+  o.userData._edge.visible=o.visible;
+ });
 }
-const manager=new THREE.LoadingManager();
-manager.setURLModifier(url=>resolveMapped(url));
-
-function normalizeName(n){return n.split('/').pop().toLowerCase()}
-function getBlobByExt(files,ext){
- return files.find(f=>normalizeName(f.name).endsWith(ext));
+function materialKey(m){return m?.name||((m?.map?.uuid||"no-map")+"|"+(m?.color?.getHexString?.()||""));} 
+function buildLists(){
+ parts=[];materials=[];let pm=new Map(),mm=new Map();
+ model.traverse(o=>{
+  if(!o.isMesh)return;
+  let pname=o.name||o.parent?.name||"Деталь";
+  let p={obj:o,name:pname,visible:o.visible};parts.push(p);
+  let ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{let key=materialKey(m);if(!mm.has(key))mm.set(key,{key,name:m.name||"Материал",meshes:[]});mm.get(key).meshes.push(o);});
+ });
+ materials=[...mm.values()];
+ renderLists(); 
 }
-
-async function extractZip(file){
- const zip=await JSZip.loadAsync(file);
- const out=[];
- for(const [name,entry] of Object.entries(zip.files)){
-   if(entry.dir) continue;
-   const lower=name.toLowerCase();
-   if(/\.(obj|mtl|jpe?g|png|webp|gif|bmp|tga)$/i.test(lower)){
-      const blob=await entry.async('blob');
-      out.push(new File([blob],name,{type:blob.type||guessMime(name)}));
-   }
- }
- return out;
+function renderLists(){
+ const pl=$("parts"),ml=$("materials");pl.innerHTML="";ml.innerHTML="";
+ parts.forEach((p,i)=>{let d=document.createElement("div");d.className="item"+(p.obj===selected?" sel":"");d.innerHTML=`<span title="${esc(p.name)}">${esc(p.name)}</span><button title="${p.obj.visible?"Скрыть":"Показать"}">${p.obj.visible?"👁":"🚫"}</button>`;d.onclick=e=>{if(e.target.tagName==="BUTTON"){p.obj.visible=!p.obj.visible;updateWire();renderLists();}else select(p.obj);};pl.appendChild(d);});
+ materials.forEach(m=>{let d=document.createElement("div");d.className="item";let vis=m.meshes.some(x=>x.visible);d.innerHTML=`<span class="material-row"><i class="material-dot"></i><span title="${esc(m.name)}">${esc(m.name)}</span></span><button>${vis?"👁":"🚫"}</button>`;let dot=d.querySelector(".material-dot");let mm=m.meshes.find(x=>x.material);let mat=Array.isArray(mm?.material)?mm.material[0]:mm?.material;if(mat?.color)dot.style.background="#"+mat.color.getHexString();d.onclick=e=>{if(e.target.tagName==="BUTTON"){let nv=!vis;m.meshes.forEach(x=>x.visible=nv);updateWire();renderLists();}else{m.meshes.forEach(x=>select(x));}};ml.appendChild(d);});
 }
-function guessMime(name){
- const e=name.toLowerCase().split('.').pop();
- return ({jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',bmp:'image/bmp',mtl:'text/plain',obj:'text/plain',tga:'image/x-tga'})[e]||'application/octet-stream';
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function select(o){if(!o?.isMesh)return;selected=o;$("selectedInfo").textContent=o.name||"Деталь";renderLists();if(selectionLine){scene.remove(selectionLine);selectionLine.geometry.dispose();selectionLine.material.dispose();}let eg=new THREE.EdgesGeometry(o.geometry,1);selectionLine=new THREE.LineSegments(eg,new THREE.LineBasicMaterial({color:0x4f46e5,linewidth:2,depthTest:false}));selectionLine.renderOrder=20;selectionLine.position.copy(o.getWorldPosition(new THREE.Vector3()));selectionLine.quaternion.copy(o.getWorldQuaternion(new THREE.Quaternion()));selectionLine.scale.copy(o.getWorldScale(new THREE.Vector3()));scene.add(selectionLine);}
+function loadManager(entries){
+ let exact={},names={};entries.forEach(e=>{exact[norm(e.name)]=e.url;names[base(e.name)]=e.url;});
+ let lm=new THREE.LoadingManager();lm.setURLModifier(u=>{let q=norm(u),b=base(q);return exact[q]||names[b]||u;});return lm;
 }
-
-async function loadFiles(files,label=''){
- loadingEl.style.display='block';
+async function unzip(file){
+ let zip=await JSZip.loadAsync(file), entries=[];for(let n of Object.keys(zip.files)){let f=zip.files[n];if(f.dir)continue;let blob=await f.async("blob"),url=URL.createObjectURL(blob);blobUrls.push(url);entries.push({name:n,url});}
+ let obj=entries.find(e=>ext(e.name)==="obj");if(!obj)throw Error("В ZIP не найден OBJ");
+ let mtl=entries.find(e=>ext(e.name)==="mtl");
+ return {obj,mtl,entries,manager:loadManager(entries)};
+}
+async function loadOBJ(obj,mtl,manager){
+ let mats=null;
+ if(mtl){mats=await new Promise((res,rej)=>new MTLLoader(manager).load(mtl.url,x=>{x.preload();res(x)},undefined,rej));}
+ return await new Promise((res,rej)=>{let l=new OBJLoader(manager);if(mats)l.setMaterials(mats);l.load(obj.url,res,undefined,rej);});
+}
+async function openFiles(files){
+ init();$("progress").style.display="block";$("bar").style.width="10%";clean();
  try{
-   cleanupUrls();
-   currentFiles=files;
-   const objFile=files.find(f=>/\.obj$/i.test(f.name));
-   if(!objFile) throw new Error('В выбранных файлах не найден OBJ.');
-   const mtlFile=files.find(f=>/\.mtl$/i.test(f.name));
-   for(const f of files) registerUrl(f.name,f);
-   // Also map basename to help OBJ/MTL references with folders.
-   const objUrl=resolveMapped(objFile.name);
-   nameEl.textContent=objFile.name.split('/').pop();
-   if(model){scene.remove(model); disposeModel(model); model=null}
-   lastMaterials=[];
-   let object;
-   if(mtlFile){
-     const text=await mtlFile.text();
-     const mtl=new MTLLoader(manager).parse(text, '');
-     mtl.preload();
-     object=await new Promise((resolve,reject)=>{
-       const loader=new OBJLoader(manager);
-       loader.setMaterials(mtl);
-       loader.load(objUrl,resolve,undefined,reject);
-     });
-     modeEl.textContent='Текстуры';
-   }else{
-     object=await new Promise((resolve,reject)=>{
-       const loader=new OBJLoader(manager);
-       loader.load(objUrl,resolve,undefined,reject);
-     });
-     modeEl.textContent='Без MTL';
-   }
-   model=object;
-   model.traverse(o=>{
-     if(o.isMesh){
-       if(o.material){
-         const arr=Array.isArray(o.material)?o.material:[o.material];
-         arr.forEach(m=>{
-           lastMaterials.push(m);
-           m.side=THREE.DoubleSide;
-           m.transparent=true;
-           m.opacity=1;
-           m.needsUpdate=true;
-         });
-       }
-       o.castShadow=true;o.receiveShadow=true;
-     }
-   });
-   scene.add(model);
-   frameModel();
-   applyAppearance();
-   setStatus(`Загружено: ${objFile.name.split('/').pop()}${mtlFile?' + MTL и текстуры':''}`);
- }catch(e){
-   console.error(e);
-   setStatus('Ошибка: '+(e?.message||e));
-   alert('Не удалось открыть модель. Проверьте, что ZIP содержит OBJ и MTL/текстуры, если они нужны.');
- }finally{loadingEl.style.display='none'}
+  let arr=[...files], objFile=arr.find(f=>ext(f.name)==="obj"),mtlFile=arr.find(f=>ext(f.name)==="mtl");
+  let modelObj,manager;
+  if(arr.length===1&&ext(arr[0].name)==="zip"){let z=await unzip(arr[0]);objFile=z.obj;mtlFile=z.mtl;manager=z.manager;}
+  else {
+   if(!objFile)throw Error("Выберите OBJ");
+   let entries=arr.map(f=>{let u=URL.createObjectURL(f);blobUrls.push(u);return {name:f.name,url:u};});manager=loadManager(entries);
+  }
+  $("bar").style.width="35%";modelObj=await loadOBJ(objFile,mtlFile,manager);$("bar").style.width="80%";
+  if(model){scene.remove(model);dispose(model);}
+  if(selectionLine){scene.remove(selectionLine);selectionLine=null;}
+  model=modelObj;scene.add(model);$("empty").style.display="none";fit(model);buildLists();applyMaterialState();$("bar").style.width="100%";
+  toast(`Готово: ${objFile.name}${mtlFile?" · MTL":" · без MTL"}`);
+ }catch(e){console.error(e);toast("Ошибка: "+(e.message||"не удалось открыть модель"));}finally{setTimeout(()=>$("progress").style.display="none",500);}
 }
-
-function disposeModel(root){
- root.traverse(o=>{
-   if(o.geometry) o.geometry.dispose();
-   if(o.material){
-     const ms=Array.isArray(o.material)?o.material:[o.material];
-     ms.forEach(m=>{if(m.map)m.map.dispose();m.dispose()});
-   }
- });
-}
-function frameModel(){
- if(!model)return;
- const box=new THREE.Box3().setFromObject(model), size=box.getSize(new THREE.Vector3()), center=box.getCenter(new THREE.Vector3());
- const max=Math.max(size.x,size.y,size.z)||1;
- const dist=max/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)))*1.5;
- camera.position.copy(center).add(new THREE.Vector3(1,0.8,1).normalize().multiplyScalar(dist));
- camera.near=Math.max(max/10000,.001); camera.far=max*100; camera.updateProjectionMatrix();
- controls.target.copy(center); controls.update();
- grid.position.y=box.min.y;
- grid.scale.setScalar(Math.max(1,max/20));
-}
-function applyAppearance(){
- const opacity=Number(opacityEl.value)/100;
- const wire=wireEl.checked;
- lastMaterials.forEach(m=>{
-   m.transparent=true;
-   m.opacity=opacity;
-   m.wireframe=wire;
-   m.depthWrite=opacity>.99;
-   m.needsUpdate=true;
- });
- modeEl.textContent=wire?'Каркас':'Текстуры';
-}
-function view(dir){
- if(!model)return;
- const box=new THREE.Box3().setFromObject(model), center=box.getCenter(new THREE.Vector3()), size=box.getSize(new THREE.Vector3()), max=Math.max(size.x,size.y,size.z)||1;
- const d=max*1.8;
- camera.position.copy(center).add(dir.clone().multiplyScalar(d));
- controls.target.copy(center); controls.update();
-}
-
-fileInput.addEventListener('change',async e=>{
- const fs=[...e.target.files];
- if(!fs.length)return;
- const z=fs.find(f=>/\.zip$/i.test(f.name));
- if(z){setStatus('Распаковываю ZIP…'); await loadFiles(await extractZip(z),z.name)}
- else await loadFiles(fs);
- fileInput.value='';
+function show(){init();$("home").style.display="none";$("viewer").style.display="block";resize();setTimeout(resize,100);}
+function view(v){if(!model)return;let c=controls.target.clone(),d=Math.max(1,Math.max(new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3()).toArray().reduce((a,b)=>Math.max(a,b),0))*1.8);if(v==="front")camera.position.set(c.x,c.y,c.z+d);if(v==="top")camera.position.set(c.x,c.y+d,c.z);if(v==="side")camera.position.set(c.x+d,c.y,c.z);controls.update();}
+function pointerDown(e){let r=$("canvas").getBoundingClientRect(),x=(e.clientX-r.left)/r.width*2-1,y=-(e.clientY-r.top)/r.height*2+1;pointer.set(x,y);raycaster.setFromCamera(pointer,camera);let hits=raycaster.intersectObject(model,true).filter(h=>h.object.isMesh&&h.object.visible);if(hits[0])select(hits[0].object);}
+function animate(){requestAnimationFrame(animate);if(autoRotate&&model)model.rotation.y+=.003;controls.update();if(renderer)renderer.render(scene,camera);}
+function setBright(v){bright=v;scene.background=new THREE.Color(v?0xf0f2f5:0x20242b);$("bg").textContent=v?"☼ Светлый":"☾ Тёмный";document.documentElement.style.setProperty("--stage",v?"#eef1f5":"#20242b");}
+document.addEventListener("DOMContentLoaded",()=>{
+ $("start").onclick=show;$("file").onchange=e=>{openFiles(e.target.files);e.target.value=""};$("file2").onchange=e=>{openFiles(e.target.files);e.target.value=""};
+ $("wire").onclick=()=>{$("wireToggle").click()};$("wireToggle").onchange=e=>{wireMode=e.target.checked;$("wire").classList.toggle("active",wireMode);updateWire()};
+ $("opacity").oninput=e=>{modelOpacity=+e.target.value/100;applyMaterialState()};$("grid").onchange=e=>grid.visible=e.target.checked;$("auto").onchange=e=>autoRotate=e.target.checked;
+ $("light").onchange=e=>{lightOn=e.target.checked;scene.traverse(x=>{if(x.isLight)x.visible=lightOn})};$("bg").onclick=()=>setBright(!bright);
+ $("fit").onclick=()=>model&&fit(model);$("reset").onclick=()=>model&&fit(model);$("full").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
+ $("help").onclick=()=>toast("1 палец — вращение. 2 пальца — масштаб/панорама. Нажмите на деталь для выделения.");
+ $("hideSelected").onclick=()=>{if(selected){selected.visible=false;selected=null;$("selectedInfo").textContent="Деталь скрыта";updateWire();renderLists();}};
+ $("showAll").onclick=()=>{if(model){model.traverse(o=>{if(o.isMesh)o.visible=true});updateWire();renderLists()}};
+ $("front").onclick=()=>view("front");$("top").onclick=()=>view("top");$("side").onclick=()=>view("side");$("iso").onclick=()=>model&&fit(model);
+ $("canvas").addEventListener("pointerdown",pointerDown);window.addEventListener("resize",resize);
+ $("stage").addEventListener("dragover",e=>e.preventDefault());$("stage").addEventListener("drop",e=>{e.preventDefault();if(e.dataTransfer.files.length)openFiles(e.dataTransfer.files)});
 });
-['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();document.body.classList.add('drag')}));
-['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();document.body.classList.remove('drag')}));
-document.addEventListener('drop',async e=>{
- const fs=[...e.dataTransfer.files]; if(!fs.length)return;
- const z=fs.find(f=>/\.zip$/i.test(f.name));
- await loadFiles(z?await extractZip(z):fs);
-});
-wireEl.addEventListener('change',applyAppearance);
-opacityEl.addEventListener('input',()=>{opacityValue.textContent=opacityEl.value+'%';applyAppearance()});
-gridEl.addEventListener('change',()=>grid.visible=gridEl.checked);
-spinEl.addEventListener('change',()=>controls.autoRotate=spinEl.checked);
-document.getElementById('reset').onclick=()=>{if(model)frameModel()};
-document.getElementById('front').onclick=()=>view(new THREE.Vector3(0,0,1));
-document.getElementById('top').onclick=()=>view(new THREE.Vector3(0,1,0));
-document.getElementById('side').onclick=()=>view(new THREE.Vector3(1,0,0));
-
-function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
-animate();
 </script>
-</body>
-</html>
+</body></html>

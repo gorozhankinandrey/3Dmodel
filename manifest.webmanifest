@@ -1,9 +1,1 @@
-{
-  "name": "3D Model Viewer",
-  "short_name": "3D Viewer",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#0b1020",
-  "theme_color": "#111827",
-  "description": "OBJ/MTL/Textures viewer for iPhone, Android and Windows"
-}
+{"name":"ModelView 3D","short_name":"ModelView","start_url":"./","display":"standalone","background_color":"#f4f6f9","theme_color":"#f4f6f9","lang":"ru"}
