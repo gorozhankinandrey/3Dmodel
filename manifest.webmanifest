@@ -1,1 +1,9 @@
-{"name":"ModelView 3D","short_name":"ModelView","start_url":"./","display":"standalone","background_color":"#f4f6f9","theme_color":"#f4f6f9","lang":"ru"}
+{
+  "name": "ModelView — 3D Viewer",
+  "short_name": "ModelView",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#f5f6f8",
+  "description": "OBJ/MTL/текстуры, выбор и скрытие элементов прямо в браузере"
+}
